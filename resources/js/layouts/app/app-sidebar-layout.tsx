@@ -78,6 +78,7 @@ export default function AppSidebarLayout({
       </Head>
 
       <div
+        className="flex min-h-screen w-full flex-col"
         style={{
           ['--primary' as any]: primaryColor,
           ['--primary-foreground' as any]: primaryForeground,
@@ -86,10 +87,16 @@ export default function AppSidebarLayout({
         }}
       >
         <AppShell variant="sidebar">
-          <AppSidebar />
-          <AppContent variant="sidebar">
+          {/* Sidebar is only for mobile now */}
+          <div className="md:hidden">
+            <AppSidebar />
+          </div>
+
+          <AppContent variant="header" className="flex flex-col w-full min-h-screen">
             <AppSidebarHeader breadcrumbs={breadcrumbs} />
-            {children}
+            <main className="flex-1 p-0">
+              {children}
+            </main>
           </AppContent>
         </AppShell>
       </div>

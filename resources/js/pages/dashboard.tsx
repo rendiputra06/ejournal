@@ -2,181 +2,145 @@ import React from 'react';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area,
-  RadialBarChart, RadialBar, Legend
+  Legend
 } from 'recharts';
+import { FileText, Users, CheckCircle, Clock } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
 ];
 
 const summaryData = [
-  { label: 'Users', value: 420, color: '#4ade80' },
-  { label: 'Backups', value: 80, color: '#f472b6' },
-  { label: 'Activity Logs', value: 1570, color: '#38bdf8' },
+  { label: 'Total Submissions', value: 124, color: 'text-blue-600', icon: FileText, desc: '+12% from last month' },
+  { label: 'Active Reviewers', value: 45, color: 'text-emerald-600', icon: Users, desc: '8 currently available' },
+  { label: 'Published Articles', value: 892, color: 'text-amber-600', icon: CheckCircle, desc: 'Across 12 volumes' },
+  { label: 'Avg. Review Time', value: '42d', color: 'text-purple-600', icon: Clock, desc: '-5 days from target' },
 ];
 
-const monthlyData = [
-  { name: 'Jan', Users: 50, Backups: 10 },
-  { name: 'Feb', Users: 120, Backups: 25 },
-  { name: 'Mar', Users: 80, Backups: 15 },
-  { name: 'Apr', Users: 150, Backups: 30 },
-  { name: 'May', Users: 90, Backups: 20 },
-  { name: 'Jun', Users: 170, Backups: 35 },
+const submissionTrends = [
+  { month: 'Jul', Submissions: 12, PeerReview: 8 },
+  { month: 'Aug', Submissions: 18, PeerReview: 14 },
+  { month: 'Sep', Submissions: 15, PeerReview: 10 },
+  { month: 'Oct', Submissions: 25, PeerReview: 20 },
+  { month: 'Nov', Submissions: 22, PeerReview: 18 },
+  { month: 'Dec', Submissions: 30, PeerReview: 24 },
 ];
 
-const pieData = [
-  { name: 'Admin', value: 20, color: '#fbbf24' },
-  { name: 'User', value: 80, color: '#a78bfa' },
+const distributionData = [
+  { name: 'Accepted', value: 65, color: 'hsl(215, 50%, 23%)' },
+  { name: 'Revision', value: 20, color: 'hsl(25, 75%, 45%)' },
+  { name: 'Declined', value: 15, color: 'hsl(0, 84%, 60%)' },
 ];
-
-const areaData = [
-  { month: 'Jan', users: 400, backups: 100 },
-  { month: 'Feb', users: 300, backups: 150 },
-  { month: 'Mar', users: 500, backups: 200 },
-  { month: 'Apr', users: 700, backups: 250 },
-];
-
-const radialData = [
-  { name: 'A', value: 100, fill: '#8884d8' },
-  { name: 'B', value: 80, fill: '#83a6ed' },
-  { name: 'C', value: 50, fill: '#8dd1e1' },
-];
-
-const COLORS = ['#0ea5e9', '#14b8a6', '#f97316', '#9333ea'];
 
 export default function Dashboard() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
-      <div className="flex flex-col gap-6 p-4">
+      <div className="flex flex-col gap-6 p-6">
+
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-serif font-bold tracking-tight">Editorial Overview</h1>
+          <p className="text-muted-foreground">Welcome back. Here is what is happening with the journal today.</p>
+        </div>
+
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {summaryData.map((item, index) => (
-            <Card key={index} className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-              <CardHeader className="px-4 py-3">
-                <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">{item.label}</CardTitle>
+            <Card key={index} className="shadow-sm border-slate-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{item.label}</CardTitle>
+                <item.icon className={`h-4 w-4 ${item.color}`} />
               </CardHeader>
-              <CardContent className="px-4 py-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{item.value}</CardContent>
+              <CardContent>
+                <div className="text-2xl font-bold">{item.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+              </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Bar Chart */}
-          <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">Monthly Activity</CardTitle>
+        {/* Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+
+          {/* Main Chart */}
+          <Card className="lg:col-span-4 shadow-sm">
+            <CardHeader>
+              <CardTitle className="font-serif">Submission & Review Trends</CardTitle>
+              <CardDescription>Monthly volume of new submissions vs peer review activity.</CardDescription>
             </CardHeader>
-            <CardContent className="h-[300px]">
+            <CardContent className="h-[350px] pl-2">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="name" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Users" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Backups" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                <BarChart data={submissionTrends}>
+                  <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend verticalAlign="top" align="right" iconType="circle" />
+                  <Bar dataKey="Submissions" fill="hsl(215, 50%, 23%)" radius={[4, 4, 0, 0]} barSize={30} />
+                  <Bar dataKey="PeerReview" fill="hsl(25, 75%, 45%)" radius={[4, 4, 0, 0]} barSize={30} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Line Chart */}
-          <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">Monthly Trends</CardTitle>
+          {/* Side Chart */}
+          <Card className="lg:col-span-3 shadow-sm">
+            <CardHeader>
+              <CardTitle className="font-serif">Decision Distribution</CardTitle>
+              <CardDescription>Current status of all active submissions.</CardDescription>
             </CardHeader>
-            <CardContent className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="name" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="Users" stroke="#22c55e" strokeWidth={2} />
-                  <Line type="monotone" dataKey="Backups" stroke="#f43f5e" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Pie Chart */}
-          <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">User Roles</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[300px] flex items-center justify-center">
+            <CardContent className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={pieData}
+                    data={distributionData}
+                    innerRadius={80}
+                    outerRadius={100}
+                    paddingAngle={5}
                     dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
                   >
-                    {pieData.map((entry, index) => (
+                    {distributionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Area Chart */}
-          <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">Resource Usage</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={areaData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                  <XAxis dataKey="month" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="users" stroke="#8884d8" fill="#c6dae7" />
-                  <Area type="monotone" dataKey="backups" stroke="#82ca9d" fill="#b7e4c7" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Radial Bar Chart */}
-          <Card className="md:col-span-2 bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">Performance Metrics</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart
-                  innerRadius="30%"
-                  outerRadius="80%"
-                  data={radialData}
-                  startAngle={180}
-                  endAngle={0}
-                >
-                  <RadialBar
-                    dataKey="value"
-                    cornerRadius={10}
-                    label={{ fill: '#fff', position: 'insideStart' }}
-                  />
-                  <Legend iconSize={10} layout="horizontal" verticalAlign="bottom" align="center" />
-                  <Tooltip />
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Recent Activity Table (Placeholder for UI) */}
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="font-serif">Recent Submissions</CardTitle>
+            <CardDescription>New articles awaiting initial editorial assessment.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between border-b last:border-0 pb-4 last:pb-0">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-medium text-sm hover:text-primary cursor-pointer transition-colors">
+                      {i === 1 ? 'Impact of AI on Modern Healthcare Systems' : i === 2 ? 'Renewable Energy Policy in South East Asia' : 'Socio-economic effects of Remote Work'}
+                    </p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-tight font-medium">Author: Dr. Jane Smith • Received: 2h ago</p>
+                  </div>
+                  <div className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${i === 1 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>
+                    {i === 1 ? 'New' : 'Pending'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

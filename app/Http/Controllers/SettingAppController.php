@@ -17,12 +17,20 @@ class SettingAppController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
-            'nama_app'   => 'required|string|max:255',
-            'deskripsi'  => 'nullable|string',
-            'logo'       => 'nullable|file|image|max:2048',
-            'favicon'    => 'nullable|file|image|max:1024',
-            'warna'      => 'nullable|string|max:20',
-            'seo'        => 'nullable|array',
+            'nama_app'          => 'required|string|max:255',
+            'deskripsi'         => 'nullable|string',
+            'logo'              => 'nullable|file|image|max:2048',
+            'favicon'           => 'nullable|file|image|max:1024',
+            'warna'             => 'nullable|string|max:20',
+            'seo'               => 'nullable|array',
+            'mail_transport'    => 'nullable|string|max:50',
+            'mail_host'         => 'nullable|string|max:255',
+            'mail_port'         => 'nullable|string|max:10',
+            'mail_username'     => 'nullable|string|max:255',
+            'mail_password'     => 'nullable|string|max:255',
+            'mail_encryption'   => 'nullable|string|max:20',
+            'mail_from_address' => 'nullable|email|max:255',
+            'mail_from_name'    => 'nullable|string|max:255',
         ]);
 
         $setting = SettingApp::firstOrNew();

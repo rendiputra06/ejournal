@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import AppLogoIcon from './app-logo-icon';
+import { BookOpen } from 'lucide-react';
 
 export default function AppLogo() {
   const setting = usePage().props.setting as {
@@ -7,28 +7,29 @@ export default function AppLogo() {
     logo?: string;
   } | null;
 
-  const defaultAppName = 'Laravel Starter Kit';
-  const defaultLogo = '';
-
+  const defaultAppName = 'Journal System';
   const appName = setting?.nama_app || defaultAppName;
-  const logo = setting?.logo || defaultLogo;
+  const logo = setting?.logo;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       {logo ? (
         <img
           src={`/storage/${logo}`}
           alt="Logo"
-          className="h-8 w-8 rounded-md object-contain"
+          className="h-9 w-9 rounded-md object-contain border bg-white p-1"
         />
       ) : (
-        <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">
-          <AppLogoIcon className="size-[1.375rem] fill-current text-white dark:text-black" />
+        <div className="bg-primary text-primary-foreground flex aspect-square size-9 items-center justify-center rounded-lg shadow-sm">
+          <BookOpen className="size-5" />
         </div>
       )}
-      <div className="grid flex-1 text-left text-sm">
-        <span className="mb-0.5 truncate leading-none font-semibold">
+      <div className="flex flex-col text-left">
+        <span className="truncate font-serif font-bold text-base tracking-tight text-primary">
           {appName}
+        </span>
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+          Editorial Panel
         </span>
       </div>
     </div>
