@@ -30,24 +30,34 @@ class RolePermissionSeeder extends Seeder
                 'reviewer-dashboard-view',
                 'author-dashboard-view',
                 'reader-dashboard-view',
+                'editorial-submissions-view',
+                'editorial-submissions-screening',
+                'editorial-submissions-assign',
+                'editorial-issues-view',
+                'editorial-issues-manage',
             ],
-            // ... (rest of the permissions stay same)
             'Access' => [
                 'access-view',
                 'permission-view',
                 'users-view',
                 'roles-view',
+                'menus-view',
             ],
             'Settings' => [
                 'settings-view',
                 'menu-view',
                 'app-settings-view',
                 'backup-view',
+                'backup.index',
+                'setting.edit',
+                'audit-logs.index',
             ],
             'Utilities' => [
                 'utilities-view',
                 'log-view',
                 'filemanager-view',
+                'files.index',
+                'media.index',
             ],
         ];
 
@@ -70,6 +80,9 @@ class RolePermissionSeeder extends Seeder
 
                 // Role-specific assignments
                 if ($name === 'editor-dashboard-view' && !$editor->hasPermissionTo($permission)) {
+                    $editor->givePermissionTo($permission);
+                }
+                if (str_contains($name, 'editorial-submissions') && !$editor->hasPermissionTo($permission)) {
                     $editor->givePermissionTo($permission);
                 }
                 if ($name === 'reviewer-dashboard-view' && !$reviewer->hasPermissionTo($permission)) {

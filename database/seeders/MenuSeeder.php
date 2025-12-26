@@ -22,7 +22,7 @@ class MenuSeeder extends Seeder
 
         // GROUP: Editorial (Manager, Editor, Reviewer)
         $editorial = Menu::updateOrCreate(
-            ['title' => 'Editorial Panel'],
+            ['title' => 'Editorial Board'],
             [
                 'icon' => 'BookOpen',
                 'route' => '#',
@@ -32,7 +32,7 @@ class MenuSeeder extends Seeder
         );
 
         Menu::updateOrCreate(
-            ['title' => 'Manager Panel', 'parent_id' => $editorial->id],
+            ['title' => 'Manager Dashboard', 'parent_id' => $editorial->id],
             [
                 'icon' => 'ShieldCheck',
                 'route' => '/dashboard/manager',
@@ -42,7 +42,7 @@ class MenuSeeder extends Seeder
         );
 
         Menu::updateOrCreate(
-            ['title' => 'Editor Panel', 'parent_id' => $editorial->id],
+            ['title' => 'Editor Dashboard', 'parent_id' => $editorial->id],
             [
                 'icon' => 'FileSearch',
                 'route' => '/dashboard/editor',
@@ -61,13 +61,63 @@ class MenuSeeder extends Seeder
             ]
         );
 
-        // GROUP: Author
         Menu::updateOrCreate(
+            ['title' => 'Previewer Tasks', 'parent_id' => $editorial->id],
+            [
+                'icon' => 'CheckCircle',
+                'route' => '/reviewer/assignments',
+                'order' => 5,
+                'permission_name' => 'reviewer-dashboard-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['title' => 'Submission Queue', 'parent_id' => $editorial->id],
+            [
+                'icon' => 'Gavel',
+                'route' => '/editorial/submissions',
+                'order' => 4,
+                'permission_name' => 'editorial-submissions-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['title' => 'Issue Management', 'parent_id' => $editorial->id],
+            [
+                'icon' => 'BookCopy',
+                'route' => '/editorial/issues',
+                'order' => 10,
+                'permission_name' => 'editorial-issues-view',
+            ]
+        );
+
+        // GROUP: Author
+        $author = Menu::updateOrCreate(
             ['title' => 'Author Panel'],
             [
-                'icon' => 'FileText',
-                'route' => '/dashboard/author',
+                'icon' => 'UserEdit',
+                'route' => '#',
                 'order' => 3,
+                'permission_name' => 'author-dashboard-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['title' => 'My Submissions', 'parent_id' => $author->id],
+            [
+                'icon' => 'FileText',
+                'route' => '/author/submissions',
+                'order' => 1,
+                'permission_name' => 'author-dashboard-view',
+            ]
+        );
+
+        Menu::updateOrCreate(
+            ['title' => 'New Submission', 'parent_id' => $author->id],
+            [
+                'icon' => 'PlusCircle',
+                'route' => '/author/submissions/create',
+                'order' => 2,
                 'permission_name' => 'author-dashboard-view',
             ]
         );
