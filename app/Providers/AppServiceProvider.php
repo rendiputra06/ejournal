@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\SettingApp;
 use Spatie\Permission\Models\Role;
 use App\Observers\GlobalActivityLogger;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
@@ -27,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (config('app.env') !== 'local') {
+            URL::forceScheme('https');
+        }
+
         User::observe(GlobalActivityLogger::class);
         Role::observe(GlobalActivityLogger::class);
         Permission::observe(GlobalActivityLogger::class);

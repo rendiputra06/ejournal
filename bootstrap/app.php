@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ShareMenus::class,
         ]);
 
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'menu.permission' => CheckMenuPermission::class,
         ]);
