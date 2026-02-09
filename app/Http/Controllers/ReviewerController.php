@@ -7,6 +7,8 @@ use App\Models\ManuscriptAssignment;
 use App\Models\ManuscriptReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\JournalNotification;
+use App\Models\User;
 
 class ReviewerController extends Controller
 {
@@ -88,6 +90,21 @@ class ReviewerController extends Controller
         );
 
         $assignment->update(['status' => 'completed']);
+
+        // Notify Section Editor or all Editors
+        $manuscript = $assignment->manuscript;
+        $editor = $manuscript->sectionEditor ?? User::role('editor')->first(); // Fallback to any editor if no section editor
+
+        if ($editor) {
+            $editor->notify(new JournalNotification(
+                'journal_review_completed',
+                [
+                    'manuscript_title' => $manuscript->title,
+                    'reviewer_name' => Auth::user()->name,
+                    'action_url' => route('editorial.submissions.show', $manuscript->id),
+                ]
+            ));
+        }
 
         return redirect()->route('reviewer.assignments.index')->with('success', 'Tinjauan naskah telah berhasil dikirimkan.');
     }

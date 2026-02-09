@@ -40,15 +40,15 @@ interface Props {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Peninjauan Sejawat', href: '/reviewer/assignments' },
+    { title: 'Peer Review', href: '/reviewer/assignments' },
 ];
 
 const getStatusBadge = (status: string) => {
     switch (status) {
-        case 'pending': return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Undangan Baru</Badge>;
-        case 'accepted': return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Aktif</Badge>;
-        case 'completed': return <Badge className="bg-green-100 text-green-700 border-green-200">Selesai</Badge>;
-        case 'declined': return <Badge variant="secondary">Ditolak</Badge>;
+        case 'pending': return <Badge className="bg-blue-100 text-blue-700 border-blue-200">New Invitation</Badge>;
+        case 'accepted': return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Active</Badge>;
+        case 'completed': return <Badge className="bg-green-100 text-green-700 border-green-200">Completed</Badge>;
+        case 'declined': return <Badge variant="secondary">Declined</Badge>;
         default: return <Badge variant="outline">{status}</Badge>;
     }
 };
@@ -58,22 +58,22 @@ export default function ReviewerIndex({ assignments }: Props) {
     const activeCount = assignments.filter(a => a.status === 'accepted').length;
 
     return (
-        <AppLayout title="Peninjauan Sejawat" breadcrumbs={breadcrumbs}>
-            <Head title="Tugas Peninjauan" />
+        <AppLayout title="Peer Review Assignments" breadcrumbs={breadcrumbs}>
+            <Head title="Review Assignments" />
 
             <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Tugas Peninjauan</h1>
-                        <p className="text-muted-foreground mt-1">Kelola undangan dan tugas peninjauan naskah Anda.</p>
+                        <h1 className="text-3xl font-bold tracking-tight">Review Assignments</h1>
+                        <p className="text-muted-foreground mt-1">Manage your manuscript review invitations and assignments.</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
-                        { label: 'Undangan Baru', value: pendingCount, icon: Clock, color: 'text-blue-500', bg: 'bg-blue-50' },
-                        { label: 'Peninjauan Aktif', value: activeCount, icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50' },
-                        { label: 'Telah Diselesaikan', value: assignments.filter(a => a.status === 'completed').length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
+                        { label: 'New Invitations', value: pendingCount, icon: Clock, color: 'text-blue-500', bg: 'bg-blue-50' },
+                        { label: 'Active Reviews', value: activeCount, icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50' },
+                        { label: 'Completed', value: assignments.filter(a => a.status === 'completed').length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
                     ].map((stat, i) => (
                         <Card key={i} className="border-sidebar-border/50 shadow-sm">
                             <CardContent className="p-4 flex items-center gap-4">
@@ -93,26 +93,26 @@ export default function ReviewerIndex({ assignments }: Props) {
                     <CardHeader className="pb-0 pt-6">
                         <CardTitle className="text-lg flex items-center gap-2">
                             <FileText className="size-5 text-primary" />
-                            Daftar Tugas
+                            Assignment List
                         </CardTitle>
-                        <CardDescription>Semua tugas peninjauan yang diberikan kepada Anda.</CardDescription>
+                        <CardDescription>All peer review tasks assigned to you.</CardDescription>
                     </CardHeader>
                     <CardContent className="px-0">
                         <Table>
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent border-sidebar-border/50">
-                                    <TableHead className="w-[120px] pl-6 font-bold uppercase text-[10px] tracking-widest">ID Naskah</TableHead>
-                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Judul Naskah</TableHead>
-                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status Tugas</TableHead>
-                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Batas Waktu</TableHead>
-                                    <TableHead className="text-right pr-6 font-bold uppercase text-[10px] tracking-widest">Aksi</TableHead>
+                                    <TableHead className="w-[120px] pl-6 font-bold uppercase text-[10px] tracking-widest">MS ID</TableHead>
+                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Manuscript Title</TableHead>
+                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
+                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Due Date</TableHead>
+                                    <TableHead className="text-right pr-6 font-bold uppercase text-[10px] tracking-widest">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {assignments.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                                            Anda belum memiliki tugas peninjauan.
+                                            You have no review assignments.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -127,7 +127,7 @@ export default function ReviewerIndex({ assignments }: Props) {
                                                         {assignment.manuscript.title}
                                                     </span>
                                                     <span className="text-[10px] text-muted-foreground italic">
-                                                        Oleh: {assignment.manuscript.authors[0]?.name} et al.
+                                                        By: {assignment.manuscript.authors[0]?.name} et al.
                                                     </span>
                                                 </div>
                                             </TableCell>

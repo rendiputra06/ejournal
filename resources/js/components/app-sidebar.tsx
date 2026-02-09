@@ -30,6 +30,19 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+/**
+ * Checks if a menu item or any of its children matches the current URL.
+ */
+function isMenuItemActive(item: MenuItem, currentUrl: string): boolean {
+  if (item.route && item.route !== '#' && currentUrl.startsWith(item.route)) {
+    return true;
+  }
+  if (item.children && item.children.length > 0) {
+    return item.children.some((child) => isMenuItemActive(child, currentUrl));
+  }
+  return false;
+}
+
 function RenderMenu({ items, level = 0, firstExpandedId }: { items: MenuItem[]; level?: number; firstExpandedId?: number | null }) {
   const { url: currentUrl } = usePage();
 
@@ -42,7 +55,7 @@ function RenderMenu({ items, level = 0, firstExpandedId }: { items: MenuItem[]; 
         const Icon = iconMapper(menu.icon || 'Folder') as LucideIcon;
         const children = Array.isArray(menu.children) ? menu.children.filter(Boolean) : [];
         const hasChildren = children.length > 0;
-        const isActive = menu.route && currentUrl.startsWith(menu.route);
+        const isActive = isMenuItemActive(menu, currentUrl);
         const indentClass = level > 0 ? `pl-${4 + level * 2}` : '';
 
         const activeClass = isActive
@@ -55,7 +68,7 @@ function RenderMenu({ items, level = 0, firstExpandedId }: { items: MenuItem[]; 
           <SidebarMenuItem key={menu.id}>
             {hasChildren ? (
               <Collapsible
-                defaultOpen={Boolean(menu.id === firstExpandedId || isActive || (menu.route && menu.route !== '#' && currentUrl.startsWith(menu.route)))}
+                defaultOpen={Boolean(menu.id === firstExpandedId || isActive)}
                 className="group/collapsible"
               >
                 <CollapsibleTrigger asChild>

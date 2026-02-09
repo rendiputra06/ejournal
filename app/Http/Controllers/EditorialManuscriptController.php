@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 use App\Models\Manuscript;
 use App\Models\User;
 use App\Models\Issue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\JournalNotification;
 
 class EditorialManuscriptController extends Controller
 {
@@ -18,7 +20,7 @@ class EditorialManuscriptController extends Controller
     {
         $manuscripts = Manuscript::with(['user', 'authors'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         return Inertia::render('editorial/submissions/index', [
             'manuscripts' => $manuscripts
@@ -69,6 +71,26 @@ class EditorialManuscriptController extends Controller
             'status' => $statusMap[$request->decision]
         ]);
 
+        // Send Notification to Author based on decision
+        if ($request->decision === 'reject') {
+            $manuscript->user->notify(new JournalNotification(
+                'journal_decision_screening_reject',
+                [
+                    'author_name' => $manuscript->user->name,
+                    'manuscript_title' => $manuscript->title,
+                ]
+            ));
+        } elseif ($request->decision === 'revision') {
+            $manuscript->user->notify(new JournalNotification(
+                'journal_decision_screening_revise',
+                [
+                    'author_name' => $manuscript->user->name,
+                    'manuscript_title' => $manuscript->title,
+                    'action_url' => route('author.submissions.show', $manuscript->id),
+                ]
+            ));
+        }
+
         return redirect()->back()->with('success', 'Keputusan prasaring telah berhasil disimpan.');
     }
 
@@ -105,6 +127,19 @@ class EditorialManuscriptController extends Controller
             'status' => 'pending',
             'due_date' => $request->due_date
         ]);
+
+        // Notify Reviewer
+        $reviewer = User::find($request->user_id);
+        $reviewer->notify(new JournalNotification(
+            'journal_review_invitation',
+            [
+                'reviewer_name' => $reviewer->name,
+                'manuscript_title' => $manuscript->title,
+                'abstract' => Str::limit($manuscript->abstract, 200),
+                'due_date' => $request->due_date,
+                'action_url' => route('reviewer.assignments.index'),
+            ]
+        ));
 
         return redirect()->back()->with('success', 'Undangan peninjauan telah dikirimkan.');
     }

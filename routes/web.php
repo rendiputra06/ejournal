@@ -17,26 +17,25 @@ use App\Http\Controllers\EditorialManuscriptController;
 use App\Http\Controllers\ReviewerController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\MediaFolderController;
+use App\Http\Controllers\EmailTemplateController;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+use App\Http\Controllers\PublicJournalController;
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\UserManualController;
+
+Route::get('/', [PublicJournalController::class, 'welcome'])->name('home');
 
 // Public Journal Routes
-Route::get('/current', function () { return Inertia::render('journal/current'); })->name('journal.current');
-Route::get('/archives', function () { return Inertia::render('journal/archives'); })->name('journal.archives');
-Route::get('/announcements', function () { return Inertia::render('journal/announcements'); })->name('journal.announcements');
-Route::get('/about', function () { return Inertia::render('journal/about'); })->name('journal.about');
+Route::get('/current', [PublicJournalController::class, 'current'])->name('journal.current');
+Route::get('/archives', [PublicJournalController::class, 'archives'])->name('journal.archives');
+Route::get('/announcements', [PublicJournalController::class, 'announcements'])->name('journal.announcements');
+Route::get('/about', [PublicJournalController::class, 'about'])->name('journal.about');
+Route::get('/search', [PublicJournalController::class, 'search'])->name('journal.search');
 
-Route::middleware(['auth', 'menu.permission'])->group(function () {
+Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Role-specific Dashboards (Holders)
-    Route::get('dashboard/manager', [DashboardController::class, 'manager'])->name('dashboard.manager');
-    Route::get('dashboard/editor', [DashboardController::class, 'editor'])->name('dashboard.editor');
-    Route::get('dashboard/reviewer', [DashboardController::class, 'reviewer'])->name('dashboard.reviewer');
-    Route::get('dashboard/author', [DashboardController::class, 'author'])->name('dashboard.author');
-    Route::get('dashboard/reader', function () { return Inertia::render('dashboard/reader'); })->name('dashboard.reader');
 
     // Editorial / Management Routes
     Route::prefix('editorial')->name('editorial.')->group(function () {
@@ -51,6 +50,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::post('volumes', [IssueController::class, 'storeVolume'])->name('volumes.store');
         Route::post('issues', [IssueController::class, 'storeIssue'])->name('issues.store');
         Route::post('submissions/{manuscript}/publish', [IssueController::class, 'publishManuscript'])->name('submissions.publish');
+
+        Route::resource('announcements', AnnouncementController::class);
     });
 
     // Reviewer Routes
@@ -79,6 +80,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::post('/files', [UserFileController::class, 'store'])->name('files.store');
     Route::delete('/files/{id}', [UserFileController::class, 'destroy'])->name('files.destroy');
     Route::resource('media', MediaFolderController::class);
+    Route::resource('email-templates', EmailTemplateController::class)->only(['index', 'edit', 'update']);
 
     // Author Submission Routes
     Route::prefix('author')->name('author.')->group(function () {
@@ -87,6 +89,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::post('/submissions', [AuthorManuscriptController::class, 'store'])->name('submissions.store');
         Route::get('/submissions/{manuscript}', [AuthorManuscriptController::class, 'show'])->name('submissions.show');
     });
+
+    Route::get('/guides', [UserManualController::class, 'index'])->name('guides.index');
 });
 
 require __DIR__ . '/settings.php';

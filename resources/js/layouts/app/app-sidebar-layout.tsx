@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import { AppContent } from '@/components/app-content';
+import { Breadcrumbs } from '@/components/breadcrumbs';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
@@ -95,6 +96,11 @@ export default function AppSidebarLayout({
           <AppContent variant="header" className="flex flex-col w-full min-h-screen">
             <AppSidebarHeader breadcrumbs={breadcrumbs} />
             <main className="flex-1 p-0">
+              {breadcrumbs && breadcrumbs.length > 0 && (
+                <div className="px-4 md:px-6 lg:px-8 pt-4">
+                  <Breadcrumbs breadcrumbs={breadcrumbs} />
+                </div>
+              )}
               {children}
             </main>
           </AppContent>

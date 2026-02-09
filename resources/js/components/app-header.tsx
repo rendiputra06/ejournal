@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { iconMapper } from '@/lib/iconMapper';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
@@ -42,10 +43,32 @@ interface AppHeaderProps {
     breadcrumbs?: BreadcrumbItem[];
 }
 
+interface MenuItem {
+    id: number;
+    title: string;
+    route: string | null;
+    icon: string;
+    children?: MenuItem[];
+}
+
+/**
+ * Checks if a menu item or any of its children matches the current URL.
+ */
+function isMenuItemActive(item: MenuItem, currentUrl: string): boolean {
+    if (item.route && item.route !== '#' && currentUrl.startsWith(item.route)) {
+        return true;
+    }
+    if (item.children && item.children.length > 0) {
+        return item.children.some((child) => isMenuItemActive(child, currentUrl));
+    }
+    return false;
+}
+
 export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
-    const page = usePage<SharedData>();
-    const { auth } = page.props;
+    const { auth, menus = [] } = usePage<SharedData & { menus?: MenuItem[] }>().props;
     const getInitials = useInitials();
+    const { url: currentUrl } = usePage();
+
     return (
         <>
             <div className="border-sidebar-border/80 border-b">
@@ -66,22 +89,52 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 <div className="mt-6 flex h-full flex-1 flex-col space-y-4">
                                     <div className="flex h-full flex-col justify-between text-sm">
                                         <div className="flex flex-col space-y-4">
-                                            {mainNavItems.map((item) => (
-                                                <Link key={item.title} href={item.url} className="flex items-center space-x-2 font-medium">
-                                                    {item.icon && <Icon iconNode={item.icon} className="h-5 w-5" />}
-                                                    <span>{item.title}</span>
-                                                </Link>
-                                            ))}
+                                            {menus.map((item) => {
+                                                const IconComponent = iconMapper(item.icon);
+                                                const isActive = isMenuItemActive(item, currentUrl);
+                                                return (
+                                                    <div key={item.id} className="flex flex-col space-y-2">
+                                                        <Link
+                                                            href={item.route || '#'}
+                                                            className={cn(
+                                                                'flex items-center space-x-2 font-medium',
+                                                                isActive ? 'text-primary' : 'text-neutral-600',
+                                                            )}
+                                                        >
+                                                            <IconComponent className="h-5 w-5" />
+                                                            <span>{item.title}</span>
+                                                        </Link>
+                                                        {item.children && item.children.length > 0 && (
+                                                            <div className="ml-6 flex flex-col space-y-2 border-l pl-4">
+                                                                {item.children.map((child) => (
+                                                                    <Link
+                                                                        key={child.id}
+                                                                        href={child.route || '#'}
+                                                                        className={cn(
+                                                                            'text-sm',
+                                                                            currentUrl.startsWith(child.route || '')
+                                                                                ? 'font-semibold text-primary'
+                                                                                : 'text-neutral-500',
+                                                                        )}
+                                                                    >
+                                                                        {child.title}
+                                                                    </Link>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
 
-                                        <div className="flex flex-col space-y-4">
+                                        <div className="flex flex-col space-y-4 border-t pt-4">
                                             {rightNavItems.map((item) => (
                                                 <a
                                                     key={item.title}
                                                     href={item.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center space-x-2 font-medium"
+                                                    className="flex items-center space-x-2 font-medium text-neutral-600"
                                                 >
                                                     {item.icon && <Icon iconNode={item.icon} className="h-5 w-5" />}
                                                     <span>{item.title}</span>
@@ -102,24 +155,68 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch">
                             <NavigationMenuList className="flex h-full items-stretch space-x-2">
-                                {mainNavItems.map((item, index) => (
-                                    <NavigationMenuItem key={index} className="relative flex h-full items-center">
-                                        <Link
-                                            href={item.url}
-                                            className={cn(
-                                                navigationMenuTriggerStyle(),
-                                                page.url === item.url && activeItemStyles,
-                                                'h-9 cursor-pointer px-3',
+                                {menus.filter(m => m.route !== '#').map((item) => {
+                                    const IconComponent = iconMapper(item.icon);
+                                    const isActive = isMenuItemActive(item, currentUrl);
+                                    return (
+                                        <NavigationMenuItem key={item.id} className="relative flex h-full items-center">
+                                            <Link
+                                                href={item.route || '#'}
+                                                className={cn(
+                                                    navigationMenuTriggerStyle(),
+                                                    isActive && activeItemStyles,
+                                                    'h-9 cursor-pointer px-3',
+                                                )}
+                                            >
+                                                <IconComponent className="mr-2 h-4 w-4" />
+                                                {item.title}
+                                            </Link>
+                                            {isActive && (
+                                                <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
                                             )}
-                                        >
-                                            {item.icon && <Icon iconNode={item.icon} className="mr-2 h-4 w-4" />}
-                                            {item.title}
-                                        </Link>
-                                        {page.url === item.url && (
-                                            <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
-                                        )}
-                                    </NavigationMenuItem>
-                                ))}
+                                        </NavigationMenuItem>
+                                    );
+                                })}
+
+                                {/* Special handling for groups without direct routes */}
+                                {menus.filter(m => m.route === '#').map((group) => {
+                                    const IconComponent = iconMapper(group.icon);
+                                    const isActive = isMenuItemActive(group, currentUrl);
+                                    return (
+                                        <NavigationMenuItem key={group.id} className="relative flex h-full items-center">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className={cn(
+                                                            navigationMenuTriggerStyle(),
+                                                            isActive && activeItemStyles,
+                                                            'h-9 cursor-pointer px-3',
+                                                        )}
+                                                    >
+                                                        <IconComponent className="mr-2 h-4 w-4" />
+                                                        {group.title}
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="start" className="w-56">
+                                                    {group.children?.map((child) => (
+                                                        <Link key={child.id} href={child.route || '#'}>
+                                                            <div className={cn(
+                                                                "px-2 py-1.5 text-sm rounded-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors",
+                                                                currentUrl.startsWith(child.route || '') ? "font-semibold bg-neutral-100 dark:bg-neutral-800 text-primary" : "text-neutral-600 dark:text-neutral-400"
+                                                            )}>
+                                                                {child.title}
+                                                            </div>
+                                                        </Link>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                            {isActive && (
+                                                <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
+                                            )}
+                                        </NavigationMenuItem>
+                                    );
+                                })}
                             </NavigationMenuList>
                         </NavigationMenu>
                     </div>

@@ -1,14 +1,16 @@
 import React from 'react';
-import { useForm, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { BreadcrumbItem } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PageHeader } from '@/components/page-header';
+import { LoadingButton } from '@/components/loading-button';
+import InputError from '@/components/input-error';
+import { type BreadcrumbItem } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface Role {
   id: number;
@@ -44,6 +46,7 @@ export default function UserForm({ user, roles, currentRole }: Props) {
   };
 
   const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Home', href: '/dashboard' },
     { title: 'User Management', href: '/users' },
     { title: isEdit ? 'Edit User' : 'Create User', href: '#' },
   ];
@@ -51,104 +54,113 @@ export default function UserForm({ user, roles, currentRole }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit User' : 'Create User'} />
-      <div className="flex-1 p-4 md:p-6">
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-2xl font-bold tracking-tight">
-              {isEdit ? 'Edit User' : 'Create New User'}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {isEdit ? 'Update user data and role' : 'Enter user data and set role'}
-            </p>
-          </CardHeader>
+      <div className="flex-1 p-4 md:p-6 lg:p-8">
+        <div className="max-w-3xl mx-auto">
+          <PageHeader
+            title={isEdit ? 'Edit User' : 'Create New User'}
+            description={isEdit ? 'Update account details and group assignments.' : 'Set up a new user account with specific role access.'}
+            className="mb-6"
+          />
 
-          <Separator />
+          <Card className="border-none shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800">
+            <CardContent className="pt-8 px-6 md:px-10">
+              <form onSubmit={handleSubmit} className="space-y-8 pb-4">
+                <div className="space-y-6">
+                  {/* Name */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="name" className="text-sm font-semibold tracking-wide uppercase text-neutral-500">Name</Label>
+                    <Input
+                      id="name"
+                      placeholder="John Doe"
+                      value={data.name}
+                      onChange={(e) => setData('name', e.target.value)}
+                      className={cn(
+                        "h-11 transition-all focus:ring-2 focus:ring-primary/20",
+                        errors.name && "border-red-500 focus:ring-red-500/20"
+                      )}
+                    />
+                    <InputError message={errors.name} />
+                  </div>
 
-          <CardContent className="pt-5">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="space-y-4">
-                {/* Name */}
-                <div>
-                  <Label htmlFor="name" className="mb-2 block">Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Full name"
-                    value={data.name}
-                    onChange={(e) => setData('name', e.target.value)}
-                    className={errors.name ? 'border-red-500' : ''}
-                  />
-                  {errors.name && <p className="text-sm text-red-500 mt-2">{errors.name}</p>}
+                  {/* Email */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="email" className="text-sm font-semibold tracking-wide uppercase text-neutral-500">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="john@example.com"
+                      value={data.email}
+                      onChange={(e) => setData('email', e.target.value)}
+                      className={cn(
+                        "h-11 transition-all focus:ring-2 focus:ring-primary/20",
+                        errors.email && "border-red-500 focus:ring-red-500/20"
+                      )}
+                    />
+                    <InputError message={errors.email} />
+                  </div>
+
+                  {/* Password */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="password" className="text-sm font-semibold tracking-wide uppercase text-neutral-500">
+                      Password {isEdit && <span className="text-xs font-normal lowercase italic text-neutral-400 font-sans tracking-normal">(Leave blank to keep current)</span>}
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={data.password}
+                      onChange={(e) => setData('password', e.target.value)}
+                      className={cn(
+                        "h-11 transition-all focus:ring-2 focus:ring-primary/20",
+                        errors.password && "border-red-500 focus:ring-red-500/20"
+                      )}
+                    />
+                    <InputError message={errors.password} />
+                  </div>
+
+                  {/* Role */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="role" className="text-sm font-semibold tracking-wide uppercase text-neutral-500">System Role</Label>
+                    <Select
+                      value={data.role}
+                      onValueChange={(value) => setData('role', value)}
+                    >
+                      <SelectTrigger className={cn(
+                        "h-11 transition-all focus:ring-2 focus:ring-primary/20",
+                        errors.role && "border-red-500 focus:ring-red-500/20"
+                      )}>
+                        <SelectValue placeholder="Select a role assignment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.name}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <InputError message={errors.role} />
+                  </div>
                 </div>
 
-                {/* Email */}
-                <div>
-                  <Label htmlFor="email" className="mb-2 block">Email</Label>
-                  <Input
-                    id="email"
-                    placeholder="Email address"
-                    value={data.email}
-                    onChange={(e) => setData('email', e.target.value)}
-                    className={errors.email ? 'border-red-500' : ''}
-                  />
-                  {errors.email && <p className="text-sm text-red-500 mt-2">{errors.email}</p>}
-                </div>
-
-                {/* Password */}
-                <div>
-                  <Label htmlFor="password" className="mb-2 block">Password {isEdit ? '(Optional)' : ''}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={data.password}
-                    onChange={(e) => setData('password', e.target.value)}
-                    className={errors.password ? 'border-red-500' : ''}
-                  />
-                  {errors.password && <p className="text-sm text-red-500 mt-2">{errors.password}</p>}
-                </div>
-
-                {/* Role */}
-                <div>
-                  <Label htmlFor="role" className="mb-2 block">Role</Label>
-                  <Select
-                    value={data.role}
-                    onValueChange={(value) => setData('role', value)}
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-neutral-100 dark:border-neutral-800">
+                  <Link href="/users" className="w-full sm:w-auto">
+                    <Button type="button" variant="ghost" className="w-full h-11 px-8 hover:bg-neutral-100">
+                      Cancel
+                    </Button>
+                  </Link>
+                  <LoadingButton
+                    type="submit"
+                    loading={processing}
+                    className="w-full sm:w-auto h-11 px-10 shadow-lg shadow-primary/20"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.name}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.role && <p className="text-sm text-red-500 mt-2">{errors.role}</p>}
+                    {isEdit ? 'Save Changes' : 'Create Account'}
+                  </LoadingButton>
                 </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
-                <Link href="/users" className="w-full sm:w-auto">
-                  <Button type="button" variant="secondary" className="w-full">
-                    Back
-                  </Button>
-                </Link>
-                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
-                  {processing
-                    ? <span className="animate-pulse">Saving...</span>
-                    : isEdit
-                      ? 'Save Changes'
-                      : 'Create User'
-                  }
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );

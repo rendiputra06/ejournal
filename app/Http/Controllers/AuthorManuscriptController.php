@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\User;
+use App\Notifications\JournalNotification;
 
 class AuthorManuscriptController extends Controller
 {
@@ -19,7 +21,7 @@ class AuthorManuscriptController extends Controller
         $manuscripts = Manuscript::with('authors')
             ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         return Inertia::render('author/submissions/index', [
             'manuscripts' => $manuscripts
@@ -80,6 +82,30 @@ class AuthorManuscriptController extends Controller
             if ($request->hasFile('file')) {
                 $manuscript->addMedia($request->file('file'))
                     ->toMediaCollection('manuscript_file');
+            }
+
+            // Send Acknowledgement to Author
+            $author = Auth::user();
+            $author->notify(new JournalNotification(
+                'journal_submission_ack',
+                [
+                    'author_name' => $author->name,
+                    'manuscript_title' => $manuscript->title,
+                    'action_url' => route('author.submissions.show', $manuscript->id),
+                ]
+            ));
+
+            // Send Alert to Editors
+            $editors = User::role(['editor', 'manager'])->get();
+            foreach ($editors as $editor) {
+                $editor->notify(new JournalNotification(
+                    'journal_new_submission',
+                    [
+                        'manuscript_title' => $manuscript->title,
+                        'author_name' => $author->name,
+                        'action_url' => route('editorial.submissions.show', $manuscript->id),
+                    ]
+                ));
             }
 
             return redirect()->route('author.submissions.index')

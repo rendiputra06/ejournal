@@ -26,11 +26,11 @@ import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 
 const STEPS = [
-    { id: 1, title: 'Persiapan', icon: BookOpen },
+    { id: 1, title: 'Preparation', icon: BookOpen },
     { id: 2, title: 'Metadata', icon: FileText },
-    { id: 3, title: 'Kontributor', icon: Users },
-    { id: 4, title: 'Unggah File', icon: Upload },
-    { id: 5, title: 'Kirim', icon: Send },
+    { id: 3, title: 'Contributors', icon: Users },
+    { id: 4, title: 'Upload File', icon: Upload },
+    { id: 5, title: 'Submit', icon: Send },
 ];
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -50,16 +50,16 @@ export default function Create() {
             { name: auth.user.name, email: auth.user.email, affiliation: '', orcid: '', is_primary: true as boolean }
         ],
         file: null as File | null,
-        agreed: false,
+        agreed: false as boolean,
     });
 
     const nextStep = () => {
         if (currentStep === 1 && !data.agreed) {
-            toast.error('Anda harus menyetujui persyaratan untuk melanjutkan.');
+            toast.error('You must agree to the requirements to proceed.');
             return;
         }
         if (currentStep === 2 && (!data.title || !data.abstract)) {
-            toast.error('Judul dan Abstrak wajib diisi.');
+            toast.error('Title and Abstract are required.');
             return;
         }
         setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
@@ -76,7 +76,7 @@ export default function Create() {
 
     const handleRemoveAuthor = (index: number) => {
         if (data.authors[index].is_primary) {
-            toast.error('Penulis utama tidak dapat dihapus.');
+            toast.error('The primary author cannot be removed.');
             return;
         }
         const newAuthors = [...data.authors];
@@ -102,14 +102,14 @@ export default function Create() {
             forceFormData: true,
             onError: (err) => {
                 const firstError = Object.values(err)[0];
-                toast.error(typeof firstError === 'string' ? firstError : 'Terjadi kesalahan validasi.');
+                toast.error(typeof firstError === 'string' ? firstError : 'Validation error occurred.');
             }
         });
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs} title="Pengajuan Naskah Baru">
-            <Head title="Submit Naskah" />
+        <AppLayout breadcrumbs={breadcrumbs} title="New Manuscript Submission">
+            <Head title="Submit Manuscript" />
 
             <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
                 {/* Progress Header */}
@@ -146,16 +146,16 @@ export default function Create() {
                     {currentStep === 1 && (
                         <Card className="border-sidebar-border/50 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <CardHeader>
-                                <CardTitle>Pernyataan Pra-Pengajuan</CardTitle>
-                                <CardDescription>Pastikan naskah Anda memenuhi kriteria berikut sebelum melanjutkan.</CardDescription>
+                                <CardTitle>Pre-Submission Statement</CardTitle>
+                                <CardDescription>Ensure your manuscript meets the following criteria before proceeding.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-4 p-4 rounded-xl bg-muted/20 border border-muted-foreground/10">
                                     {[
-                                        "Naskah belum pernah diterbitkan sebelumnya, juga tidak sedang dalam pertimbangan oleh jurnal lain.",
-                                        "File naskah dalam format dokumen Microsoft Word (OpenOffice, atau RTF).",
-                                        "Teks mengikuti persyaratan gaya selingkung dan bibliografi yang digariskan dalam Panduan Penulis.",
-                                        "Instruksi untuk blind review telah diikuti (identitas penulis dihapus dari file utama)."
+                                        "The manuscript has not been published previously, nor is it currently under consideration by another journal.",
+                                        "The submission file is in Microsoft Word (OpenOffice, or RTF) format.",
+                                        "The text conforms to the stylistic and bibliographic requirements outlined in the Author Guidelines.",
+                                        "The instructions for blind review have been followed (author identity removed from main file)."
                                     ].map((item, i) => (
                                         <div key={i} className="flex gap-3">
                                             <div className="mt-1 size-5 rounded border border-primary/30 flex items-center justify-center bg-background">
@@ -174,7 +174,7 @@ export default function Create() {
                                         className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
                                     />
                                     <Label htmlFor="agreed" className="text-sm font-semibold cursor-pointer">
-                                        Saya telah membaca dan menyetujui semua persyaratan di atas.
+                                        I have read and agree to all the requirements above.
                                     </Label>
                                 </div>
                             </CardContent>
@@ -185,15 +185,15 @@ export default function Create() {
                     {currentStep === 2 && (
                         <Card className="border-sidebar-border/50 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <CardHeader>
-                                <CardTitle>Metadata Naskah</CardTitle>
-                                <CardDescription>Lengkapi rincian naskah Anda.</CardDescription>
+                                <CardTitle>Manuscript Metadata</CardTitle>
+                                <CardDescription>Complete the details of your manuscript.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="title">Judul Naskah (Lengkap)</Label>
+                                    <Label htmlFor="title">Manuscript Title (Full)</Label>
                                     <Textarea
                                         id="title"
-                                        placeholder="Ketik judul lengkap di sini..."
+                                        placeholder="Type full title here..."
                                         className="min-h-[80px]"
                                         value={data.title}
                                         onChange={e => setData('title', e.target.value)}
@@ -202,10 +202,10 @@ export default function Create() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="abstract">Abstrak (Bahasa Inggris)</Label>
+                                    <Label htmlFor="abstract">Abstract (English)</Label>
                                     <Textarea
                                         id="abstract"
-                                        placeholder="Ringkasan naskah Anda..."
+                                        placeholder="Your manuscript summary..."
                                         className="min-h-[150px]"
                                         value={data.abstract}
                                         onChange={e => setData('abstract', e.target.value)}
@@ -215,16 +215,16 @@ export default function Create() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="keywords">Kata Kunci</Label>
+                                        <Label htmlFor="keywords">Keywords</Label>
                                         <Input
                                             id="keywords"
-                                            placeholder="Pisahkan dengan koma (misal: AI, Journal, IoT)"
+                                            placeholder="Separate with commas (e.g., AI, Journal, IoT)"
                                             value={data.keywords}
                                             onChange={e => setData('keywords', e.target.value)}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="category">Kategori Artikel</Label>
+                                        <Label htmlFor="category">Article Category</Label>
                                         <select
                                             id="category"
                                             className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
@@ -246,11 +246,11 @@ export default function Create() {
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-xl font-bold">Daftar Penulis & Kontributor</h2>
-                                    <p className="text-sm text-muted-foreground">Tambahkan rekan penulis jika ada.</p>
+                                    <h2 className="text-xl font-bold">Authors & Contributors</h2>
+                                    <p className="text-sm text-muted-foreground">Add co-authors if applicable.</p>
                                 </div>
                                 <Button type="button" variant="outline" size="sm" onClick={handleAddAuthor} className="gap-2">
-                                    <Plus className="size-4" /> Tambah Penulis
+                                    <Plus className="size-4" /> Add Author
                                 </Button>
                             </div>
 
@@ -264,15 +264,15 @@ export default function Create() {
                                     <CardContent className="pt-6 space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label>Nama Lengkap</Label>
+                                                <Label>Full Name</Label>
                                                 <Input
                                                     value={author.name}
                                                     onChange={e => handleAuthorChange(index, 'name', e.target.value)}
-                                                    placeholder="Nama Lengkap & Gelar (jika perlu)"
+                                                    placeholder="Full Name & Title (if needed)"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Alamat Email</Label>
+                                                <Label>Email Address</Label>
                                                 <Input
                                                     type="email"
                                                     value={author.email}
@@ -283,15 +283,15 @@ export default function Create() {
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label>Afiliasi / Institusi</Label>
+                                                <Label>Affiliation / Institution</Label>
                                                 <Input
                                                     value={author.affiliation}
                                                     onChange={e => handleAuthorChange(index, 'affiliation', e.target.value)}
-                                                    placeholder="Universitas atau Organisasi"
+                                                    placeholder="University or Organization"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>ORCID iD (Opsional)</Label>
+                                                <Label>ORCID iD (Optional)</Label>
                                                 <Input
                                                     value={author.orcid}
                                                     onChange={e => handleAuthorChange(index, 'orcid', e.target.value)}
@@ -307,11 +307,11 @@ export default function Create() {
                                                     onChange={e => handleAuthorChange(index, 'is_primary', e.target.checked)}
                                                     className="size-4 rounded border-gray-300 text-primary"
                                                 />
-                                                <span className="text-xs font-medium">Jadikan penulis korespondensi</span>
+                                                <span className="text-xs font-medium">Set as corresponding author</span>
                                             </div>
                                             {!author.is_primary && (
                                                 <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveAuthor(index)} className="text-destructive hover:text-destructive hover:bg-destructive/5 gap-1">
-                                                    <Trash2 className="size-4" /> Hapus
+                                                    <Trash2 className="size-4" /> Remove
                                                 </Button>
                                             )}
                                         </div>
@@ -325,8 +325,8 @@ export default function Create() {
                     {currentStep === 4 && (
                         <Card className="border-sidebar-border/50 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <CardHeader>
-                                <CardTitle>Unggah File Naskah</CardTitle>
-                                <CardDescription>Unggah file naskah Anda dalam format PDF atau Word.</CardDescription>
+                                <CardTitle>Upload Manuscript File</CardTitle>
+                                <CardDescription>Upload your manuscript file in PDF or Word format.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div
@@ -343,8 +343,8 @@ export default function Create() {
                                         <Upload className="size-8" />
                                     </div>
                                     <div className="text-center">
-                                        <p className="font-bold">{data.file ? data.file.name : "Klik untuk memilih file"}</p>
-                                        <p className="text-xs text-muted-foreground mt-1">Hanya file PDF, DOC, atau DOCX (Max 10MB)</p>
+                                        <p className="font-bold">{data.file ? data.file.name : "Click to select file"}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">PDF, DOC, or DOCX (Max 10MB)</p>
                                     </div>
                                     <input
                                         id="manuscript_file"
@@ -355,7 +355,7 @@ export default function Create() {
                                     />
                                     {data.file && (
                                         <Button type="button" variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); setData('file', null); }} className="mt-2">
-                                            Ganti File
+                                            Change File
                                         </Button>
                                     )}
                                 </div>
@@ -363,7 +363,7 @@ export default function Create() {
                                 <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
                                     <AlertCircle className="size-5 text-amber-600 shrink-0 mt-0.5" />
                                     <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                                        <strong>Penting:</strong> Untuk menjamin <em>blind review</em>, pastikan semua identitas penulis (nama, afiliasi) telah dihapus dari properti file dan konten di dalam naskah ini.
+                                        <strong>Important:</strong> To ensure a blind review, please make sure all author identities (names, affiliations) have been removed from file properties and content within this manuscript.
                                     </p>
                                 </div>
                             </CardContent>
@@ -374,28 +374,28 @@ export default function Create() {
                     {currentStep === 5 && (
                         <Card className="border-sidebar-border/50 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <CardHeader>
-                                <CardTitle>Tinjauan Akhir</CardTitle>
-                                <CardDescription>Periksa kembali data Anda sebelum melakukan pengiriman (final submission).</CardDescription>
+                                <CardTitle>Final Review</CardTitle>
+                                <CardDescription>Double-check your data before performing final submission.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="space-y-4">
                                     <div>
-                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Judul Naskah</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Manuscript Title</Label>
                                         <p className="text-sm font-semibold leading-relaxed">{data.title}</p>
                                     </div>
                                     <Separator className="opacity-50" />
                                     <div>
-                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Abstrak</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Abstract</Label>
                                         <p className="text-xs leading-relaxed text-muted-foreground line-clamp-4 italic">"{data.abstract}"</p>
                                     </div>
                                     <Separator className="opacity-50" />
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Kategori</Label>
+                                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Category</Label>
                                             <p className="text-sm font-bold capitalize">{data.category.replace('_', ' ')}</p>
                                         </div>
                                         <div>
-                                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">File Naskah</Label>
+                                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">File</Label>
                                             <p className="text-sm font-bold flex items-center gap-1">
                                                 <Upload className="size-3 text-green-600" />
                                                 {data.file?.name}
@@ -404,14 +404,14 @@ export default function Create() {
                                     </div>
                                     <Separator className="opacity-50" />
                                     <div>
-                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Daftar Penulis</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Authors</Label>
                                         <div className="mt-2 space-y-2">
                                             {data.authors.map((a, i) => (
                                                 <div key={i} className="text-xs flex items-center gap-2">
-                                                    <Badge variant="outline" className="text-[9px] h-4">P{i + 1}</Badge>
+                                                    <Badge variant="outline" className="text-[9px] h-4">A{i + 1}</Badge>
                                                     <span className="font-semibold">{a.name}</span>
                                                     <span className="text-muted-foreground opacity-60">({a.email})</span>
-                                                    {a.is_primary && <Badge className="text-[9px] h-4 bg-primary/20 text-primary border-none shadow-none">Korespondensi</Badge>}
+                                                    {a.is_primary && <Badge className="text-[9px] h-4 bg-primary/20 text-primary border-none shadow-none">Corresponding</Badge>}
                                                 </div>
                                             ))}
                                         </div>
@@ -419,7 +419,7 @@ export default function Create() {
                                 </div>
 
                                 <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
-                                    <p className="text-sm font-medium">Dengan mengeklik tombol di bawah, Anda secara resmi mengajukan naskah ini ke redaksi jurnal kami.</p>
+                                    <p className="text-sm font-medium">By clicking the button below, you officially submit this manuscript to our editorial board.</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -434,7 +434,7 @@ export default function Create() {
                             disabled={currentStep === 1 || processing}
                             className="gap-2"
                         >
-                            <ChevronLeft className="size-4" /> Kembali
+                            <ChevronLeft className="size-4" /> Back
                         </Button>
 
                         {currentStep < 5 ? (
@@ -443,7 +443,7 @@ export default function Create() {
                                 onClick={nextStep}
                                 className="gap-2 rounded-full px-8 shadow-lg shadow-primary/20"
                             >
-                                Lanjut <ChevronRight className="size-4" />
+                                Next <ChevronRight className="size-4" />
                             </Button>
                         ) : (
                             <Button
@@ -452,7 +452,7 @@ export default function Create() {
                                 disabled={processing || !data.file}
                                 className="gap-2 rounded-full px-10 shadow-xl shadow-primary/30 h-11"
                             >
-                                {processing ? "Mengirim..." : "Kirim Naskah"}
+                                {processing ? "Submitting..." : "Submit Manuscript"}
                                 <Send className="size-4" />
                             </Button>
                         )}

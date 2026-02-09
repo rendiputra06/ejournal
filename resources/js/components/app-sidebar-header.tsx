@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { usePage, Link } from '@inertiajs/react';
-import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { type BreadcrumbItem as BreadcrumbItemType, type SharedData } from '@/types';
@@ -114,10 +113,6 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider hidden sm:inline-block">Journal System</span>
           </div>
         </Link>
-
-        <div className="hidden xl:block ml-4 border-l border-sidebar-border/50 pl-6">
-          <Breadcrumbs breadcrumbs={breadcrumbs} />
-        </div>
       </div>
 
       {/* Center Area: Desktop Navigation */}

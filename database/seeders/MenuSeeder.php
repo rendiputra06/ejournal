@@ -4,256 +4,215 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Menu;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class MenuSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // MENU: Dashboard
-        Menu::updateOrCreate(
-            ['title' => 'Dashboard'],
+        // Truncate table to ensure a clean state
+        $this->cleanup();
+
+        $menus = [
             [
+                'title' => 'Dashboard',
                 'icon' => 'Home',
                 'route' => '/dashboard',
                 'order' => 1,
                 'permission_name' => 'dashboard-view',
-            ]
-        );
-
-        // GROUP: Editorial (Manager, Editor, Reviewer)
-        $editorial = Menu::updateOrCreate(
-            ['title' => 'Editorial Board'],
+            ],
             [
+                'title' => 'Editorial',
                 'icon' => 'BookOpen',
                 'route' => '#',
                 'order' => 2,
                 'permission_name' => 'dashboard-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Manager Dashboard', 'parent_id' => $editorial->id],
+                'children' => [
+                    [
+                        'title' => 'Submission Queue',
+                        'icon' => 'Gavel',
+                        'route' => '/editorial/submissions',
+                        'order' => 1,
+                        'permission_name' => 'editorial-submissions-view',
+                    ],
+                    [
+                        'title' => 'Reviewer Tasks',
+                        'icon' => 'CheckCircle',
+                        'route' => '/reviewer/assignments',
+                        'order' => 2,
+                        'permission_name' => 'reviewer-dashboard-view',
+                    ],
+                    [
+                        'title' => 'Issue Management',
+                        'icon' => 'BookCopy',
+                        'route' => '/editorial/issues',
+                        'order' => 3,
+                        'permission_name' => 'editorial-issues-view',
+                    ],
+                    [
+                        'title' => 'Announcements',
+                        'icon' => 'Megaphone',
+                        'route' => '/editorial/announcements',
+                        'order' => 4,
+                        'permission_name' => 'editorial-issues-view', // Using existing editorial permission
+                    ],
+                ]
+            ],
             [
-                'icon' => 'ShieldCheck',
-                'route' => '/dashboard/manager',
-                'order' => 1,
-                'permission_name' => 'manager-dashboard-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Editor Dashboard', 'parent_id' => $editorial->id],
-            [
-                'icon' => 'FileSearch',
-                'route' => '/dashboard/editor',
-                'order' => 2,
-                'permission_name' => 'editor-dashboard-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Reviewer Panel', 'parent_id' => $editorial->id],
-            [
-                'icon' => 'ClipboardCheck',
-                'route' => '/dashboard/reviewer',
-                'order' => 3,
-                'permission_name' => 'reviewer-dashboard-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Previewer Tasks', 'parent_id' => $editorial->id],
-            [
-                'icon' => 'CheckCircle',
-                'route' => '/reviewer/assignments',
-                'order' => 5,
-                'permission_name' => 'reviewer-dashboard-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Submission Queue', 'parent_id' => $editorial->id],
-            [
-                'icon' => 'Gavel',
-                'route' => '/editorial/submissions',
-                'order' => 4,
-                'permission_name' => 'editorial-submissions-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Issue Management', 'parent_id' => $editorial->id],
-            [
-                'icon' => 'BookCopy',
-                'route' => '/editorial/issues',
-                'order' => 10,
-                'permission_name' => 'editorial-issues-view',
-            ]
-        );
-
-        // GROUP: Author
-        $author = Menu::updateOrCreate(
-            ['title' => 'Author Panel'],
-            [
+                'title' => 'Author Panel',
                 'icon' => 'UserEdit',
                 'route' => '#',
                 'order' => 3,
                 'permission_name' => 'author-dashboard-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'My Submissions', 'parent_id' => $author->id],
+                'children' => [
+                    [
+                        'title' => 'My Submissions',
+                        'icon' => 'FileText',
+                        'route' => '/author/submissions',
+                        'order' => 1,
+                        'permission_name' => 'author-dashboard-view',
+                    ],
+                    [
+                        'title' => 'New Submission',
+                        'icon' => 'PlusCircle',
+                        'route' => '/author/submissions/create',
+                        'order' => 2,
+                        'permission_name' => 'author-dashboard-view',
+                    ],
+                ]
+            ],
             [
-                'icon' => 'FileText',
-                'route' => '/author/submissions',
-                'order' => 1,
-                'permission_name' => 'author-dashboard-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'New Submission', 'parent_id' => $author->id],
-            [
-                'icon' => 'PlusCircle',
-                'route' => '/author/submissions/create',
-                'order' => 2,
-                'permission_name' => 'author-dashboard-view',
-            ]
-        );
-
-        // GROUP: Library (Reader)
-        Menu::updateOrCreate(
-            ['title' => 'My Library'],
-            [
-                'icon' => 'Bookmark',
-                'route' => '/dashboard/reader',
-                'order' => 4,
-                'permission_name' => 'reader-dashboard-view',
-            ]
-        );
-
-        // GROUP: Access
-        $access = Menu::updateOrCreate(
-            ['title' => 'System Access'],
-            [
+                'title' => 'Access Control',
                 'icon' => 'Contact',
                 'route' => '#',
                 'order' => 10,
                 'permission_name' => 'access-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Users', 'parent_id' => $access->id],
+                'children' => [
+                    [
+                        'title' => 'Users',
+                        'icon' => 'Users',
+                        'route' => '/users',
+                        'order' => 1,
+                        'permission_name' => 'users-view',
+                    ],
+                    [
+                        'title' => 'Roles',
+                        'icon' => 'ShieldCheck',
+                        'route' => '/roles',
+                        'order' => 2,
+                        'permission_name' => 'roles-view',
+                    ],
+                    [
+                        'title' => 'Permissions',
+                        'icon' => 'AlertOctagon',
+                        'route' => '/permissions',
+                        'order' => 3,
+                        'permission_name' => 'permission-view',
+                    ],
+                    [
+                        'title' => 'Menu Manager',
+                        'icon' => 'Settings',
+                        'route' => '/menus',
+                        'order' => 4,
+                        'permission_name' => 'menus-view',
+                    ],
+                ]
+            ],
             [
-                'icon' => 'Users',
-                'route' => '/users',
-                'order' => 1,
-                'permission_name' => 'users-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Roles', 'parent_id' => $access->id],
-            [
-                'icon' => 'ShieldCheck',
-                'route' => '/roles',
-                'order' => 2,
-                'permission_name' => 'roles-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Permissions', 'parent_id' => $access->id],
-            [
-                'icon' => 'AlertOctagon',
-                'route' => '/permissions',
-                'order' => 3,
-                'permission_name' => 'permission-view',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Menu Manager', 'parent_id' => $access->id],
-            [
-                'icon' => 'Settings',
-                'route' => '/menus',
-                'order' => 4,
-                'permission_name' => 'menus-view',
-            ]
-        );
-
-        // GROUP: Settings
-        $settings = Menu::updateOrCreate(
-            ['title' => 'Settings'],
-            [
+                'title' => 'Settings',
                 'icon' => 'Settings',
                 'route' => '#',
                 'order' => 11,
                 'permission_name' => 'setting.edit',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'App Settings', 'parent_id' => $settings->id],
+                'children' => [
+                    [
+                        'title' => 'App Settings',
+                        'icon' => 'Settings',
+                        'route' => '/settingsapp',
+                        'order' => 1,
+                        'permission_name' => 'setting.edit',
+                    ],
+                    [
+                        'title' => 'Email Templates',
+                        'icon' => 'Mail',
+                        'route' => '/email-templates',
+                        'order' => 2,
+                        'permission_name' => 'setting.edit',
+                    ],
+                    [
+                        'title' => 'Backup',
+                        'icon' => 'Database',
+                        'route' => '/backup',
+                        'order' => 3,
+                        'permission_name' => 'backup.index',
+                    ],
+                    [
+                        'title' => 'Audit Logs',
+                        'icon' => 'History',
+                        'route' => '/audit-logs',
+                        'order' => 4,
+                        'permission_name' => 'audit-logs.index',
+                    ],
+                ]
+            ],
             [
-                'icon' => 'Settings',
-                'route' => '/settingsapp',
-                'order' => 1,
-                'permission_name' => 'setting.edit',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Backup', 'parent_id' => $settings->id],
-            [
-                'icon' => 'Database',
-                'route' => '/backup',
-                'order' => 2,
-                'permission_name' => 'backup.index',
-            ]
-        );
-
-        Menu::updateOrCreate(
-            ['title' => 'Audit Logs', 'parent_id' => $settings->id],
-            [
-                'icon' => 'History',
-                'route' => '/audit-logs',
-                'order' => 3,
-                'permission_name' => 'audit-logs.index',
-            ]
-        );
-
-        // GROUP: Files
-        $files = Menu::updateOrCreate(
-            ['title' => 'Files Explorer'],
-            [
+                'title' => 'File Manager',
                 'icon' => 'Folder',
                 'route' => '#',
                 'order' => 12,
                 'permission_name' => 'files.index',
+                'children' => [
+                    [
+                        'title' => 'My Files',
+                        'icon' => 'FileText',
+                        'route' => '/files',
+                        'order' => 1,
+                        'permission_name' => 'files.index',
+                    ],
+                    [
+                        'title' => 'Media',
+                        'icon' => 'Image',
+                        'route' => '/media',
+                        'order' => 2,
+                        'permission_name' => 'media.index',
+                    ],
+                ]
             ]
-        );
+        ];
 
-        Menu::updateOrCreate(
-            ['title' => 'My Files', 'parent_id' => $files->id],
-            [
-                'icon' => 'FileText',
-                'route' => '/files',
-                'order' => 1,
-                'permission_name' => 'files.index',
-            ]
-        );
+        $this->createMenus($menus);
+    }
 
-        Menu::updateOrCreate(
-            ['title' => 'Media', 'parent_id' => $files->id],
-            [
-                'icon' => 'Image',
-                'route' => '/media',
-                'order' => 2,
-                'permission_name' => 'media.index',
-            ]
-        );
+    /**
+     * Recursively create menus.
+     */
+    private function createMenus(array $menus, ?int $parentId = null): void
+    {
+        foreach ($menus as $menuData) {
+            $children = $menuData['children'] ?? [];
+            unset($menuData['children']);
+
+            $menuData['parent_id'] = $parentId;
+
+            $menu = Menu::create($menuData);
+
+            if (!empty($children)) {
+                $this->createMenus($children, $menu->id);
+            }
+        }
+    }
+
+    /**
+     * Clean up existing data.
+     */
+    private function cleanup(): void
+    {
+        Schema::disableForeignKeyConstraints();
+        Menu::truncate();
+        Schema::enableForeignKeyConstraints();
     }
 }

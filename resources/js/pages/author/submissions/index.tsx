@@ -2,12 +2,15 @@ import React from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, FileText, Clock, CheckCircle2, AlertCircle, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, FileText, CheckCircle2, Inbox, Calendar, User, ArrowUpRight, Sparkles } from 'lucide-react';
 import dayjs from 'dayjs';
 import { type BreadcrumbItem } from '@/types';
+import { PageHeader } from '@/components/page-header';
+import { StatusBadge } from '@/components/status-badge';
+import Pagination from '@/components/pagination';
+import { cn } from '@/lib/utils';
 
 interface Author {
     id: number;
@@ -27,155 +30,153 @@ interface Manuscript {
 }
 
 interface Props {
-    manuscripts: Manuscript[];
+    manuscripts: {
+        data: Manuscript[];
+        links: { url: string | null; label: string; active: boolean }[];
+        active_count: number;
+        finished_count: number;
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard Author', href: '/dashboard/author' },
-    { title: 'Submissions', href: '/author/submissions' },
+    { title: 'Home', href: '/dashboard' },
+    { title: 'My Manuscripts', href: '/author/submissions' },
 ];
 
-const getStatusBadge = (status: string) => {
-    switch (status) {
-        case 'draft':
-            return <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-slate-200">Draf</Badge>;
-        case 'submitted':
-            return <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">Menunggu Review</Badge>;
-        case 'screening':
-            return <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100">Prasaring</Badge>;
-        case 'reviewing':
-            return <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-100">Sedang Direview</Badge>;
-        case 'final_decision':
-            return <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">Selesai</Badge>;
-        default:
-            return <Badge variant="outline">{status}</Badge>;
-    }
-};
-
-export default function Index({ manuscripts }: Props) {
+export default function AuthorIndex({ manuscripts }: Props) {
     return (
-        <AppLayout breadcrumbs={breadcrumbs} title="Daftar Pengajuan">
-            <Head title="Naskah Saya" />
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Manuscript Submission" />
 
-            <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Naskah Saya</h1>
-                        <p className="text-muted-foreground">Kelola dan pantau status naskah yang Anda ajukan.</p>
+            <div className="flex-1 p-4 md:p-6 lg:p-8">
+                <div className="max-w-7xl mx-auto">
+                    <PageHeader
+                        title="My Manuscripts"
+                        description="Monitor the progress of your scientific contributions and manage your submissions."
+                    >
+                        <Button asChild className="gap-2 shadow-lg shadow-primary/10 rounded-full group">
+                            <Link href="/author/submissions/create">
+                                <PlusCircle className="size-4 group-hover:rotate-90 transition-transform" />
+                                <span>Submit New Manuscript</span>
+                            </Link>
+                        </Button>
+                    </PageHeader>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <Card className="border-none shadow-sm ring-1 ring-blue-200 dark:ring-blue-900/30 bg-blue-50/20 dark:bg-blue-950/5 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <FileText className="size-24 -mr-8 -mt-8" />
+                            </div>
+                            <CardContent className="pt-6 relative">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-2xl text-blue-600 dark:text-blue-400 ring-1 ring-blue-200/50 dark:ring-blue-800/50">
+                                        <FileText className="size-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Total Submissions</p>
+                                        <p className="text-3xl font-black text-neutral-900 dark:text-neutral-50">{manuscripts.data.length}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-none shadow-sm ring-1 ring-amber-200 dark:ring-amber-900/30 bg-amber-50/20 dark:bg-amber-950/5 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Sparkles className="size-24 -mr-8 -mt-8" />
+                            </div>
+                            <CardContent className="pt-6 relative">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-amber-100 dark:bg-amber-900/50 rounded-2xl text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/50">
+                                        <Inbox className="size-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Active Review</p>
+                                        <p className="text-3xl font-black text-neutral-900 dark:text-neutral-50">{manuscripts.active_count || 0}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-none shadow-sm ring-1 ring-emerald-200 dark:ring-emerald-900/30 bg-emerald-50/20 dark:bg-emerald-950/5 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <CheckCircle2 className="size-24 -mr-8 -mt-8" />
+                            </div>
+                            <CardContent className="pt-6 relative">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/50">
+                                        <CheckCircle2 className="size-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Completed</p>
+                                        <p className="text-3xl font-black text-neutral-900 dark:text-neutral-50">{manuscripts.finished_count || 0}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
-                    <Button asChild className="gap-2 shadow-lg shadow-primary/20 rounded-full h-11 px-6">
-                        <Link href={route('author.submissions.create')}>
-                            <PlusCircle className="size-4" />
-                            Ajukan Naskah Baru
-                        </Link>
-                    </Button>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="bg-blue-50/50 border-blue-100">
-                        <CardContent className="pt-6">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                                    <FileText className="size-5" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-blue-600/80 uppercase tracking-wider">Total Naskah</p>
-                                    <p className="text-2xl font-bold">{manuscripts.length}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-amber-50/50 border-amber-100">
-                        <CardContent className="pt-6">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
-                                    <Clock className="size-5" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-amber-600/80 uppercase tracking-wider">Sedang Diproses</p>
-                                    <p className="text-2xl font-bold">
-                                        {manuscripts.filter(m => ['submitted', 'screening', 'reviewing'].includes(m.status)).length}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-green-50/50 border-green-100">
-                        <CardContent className="pt-6">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-green-100 rounded-lg text-green-600">
-                                    <CheckCircle2 className="size-5" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-green-600/80 uppercase tracking-wider">Selesai</p>
-                                    <p className="text-2xl font-bold">
-                                        {manuscripts.filter(m => m.status === 'final_decision').length}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <Card className="border-sidebar-border/50 shadow-sm overflow-hidden">
-                    <CardHeader className="bg-muted/30 pb-4">
-                        <CardTitle className="text-lg">Riwayat Pengajuan</CardTitle>
-                        <CardDescription>Daftar lengkap naskah yang pernah Anda kirimkan ke jurnal kami.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="relative overflow-x-auto">
+                    <Card className="border-none shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 overflow-hidden bg-background/50 backdrop-blur-sm">
+                        <CardContent className="p-0">
                             <Table>
-                                <TableHeader className="bg-muted/10">
-                                    <TableRow>
-                                        <TableHead className="w-[120px]">ID Naskah</TableHead>
-                                        <TableHead>Judul Naskah</TableHead>
-                                        <TableHead>Kategori</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Tanggal Kirim</TableHead>
-                                        <TableHead className="text-right">Aksi</TableHead>
+                                <TableHeader className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                    <TableRow className="hover:bg-transparent border-neutral-100 dark:border-neutral-800">
+                                        <TableHead className="w-[140px] text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4">Submission ID</TableHead>
+                                        <TableHead className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4">Manuscript Information</TableHead>
+                                        <TableHead className="w-[180px] text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4 text-center">Status</TableHead>
+                                        <TableHead className="w-[180px] text-right text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4">Last Modified</TableHead>
+                                        <TableHead className="w-[100px] text-right text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4 sr-only">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {manuscripts.length === 0 ? (
+                                    {manuscripts.data.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <AlertCircle className="size-8 opacity-20" />
-                                                    <p>Belum ada naskah yang diajukan.</p>
+                                            <TableCell colSpan={5} className="h-72 text-center text-muted-foreground italic">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <Inbox className="size-12 opacity-10 mb-2" />
+                                                    <p className="text-xl font-light">You haven't submitted any manuscripts yet.</p>
+                                                    <Button asChild variant="outline" size="sm" className="rounded-full">
+                                                        <Link href="/author/submissions/create">Submit Your First Manuscript</Link>
+                                                    </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        manuscripts.map((manuscript) => (
-                                            <TableRow key={manuscript.id} className="group hover:bg-muted/5 transition-colors">
-                                                <TableCell className="font-mono text-xs text-muted-foreground uppercase">
-                                                    {manuscript.external_id || `#${manuscript.id}`}
+                                        manuscripts.data.map((manuscript) => (
+                                            <TableRow key={manuscript.id} className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30 border-neutral-100 dark:border-neutral-800 transition-colors">
+                                                <TableCell className="py-5">
+                                                    <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded ring-1 ring-neutral-200 dark:ring-neutral-700">
+                                                        {manuscript.external_id || `#${manuscript.id}`}
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex flex-col gap-0.5 max-w-[400px]">
-                                                        <span className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                                                    <div className="flex flex-col gap-1 max-w-[500px]">
+                                                        <span className="font-bold text-sm text-neutral-900 dark:text-neutral-100 leading-snug group-hover:text-primary transition-colors line-clamp-2">
                                                             {manuscript.title}
                                                         </span>
-                                                        <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 line-clamp-1">
-                                                            Kontributor: {manuscript.authors.map(a => a.name).join(', ')}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium uppercase tracking-tighter">
+                                                            <FileText className="size-3 opacity-60" />
+                                                            {manuscript.category.replace(/_/g, ' ')}
+                                                        </div>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="capitalize text-sm font-medium">
-                                                    {manuscript.category.replace('_', ' ')}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {getStatusBadge(manuscript.status)}
-                                                </TableCell>
-                                                <TableCell className="text-sm text-muted-foreground">
-                                                    {dayjs(manuscript.created_at).format('DD MMM YYYY')}
+                                                <TableCell className="text-center">
+                                                    <div className="flex justify-center">
+                                                        <StatusBadge status={manuscript.status} />
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon" asChild className="size-8 rounded-full hover:bg-muted">
-                                                        <Link href={route('author.submissions.show', manuscript.id)}>
-                                                            <MoreHorizontal className="size-4" />
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                                                            <Calendar className="size-3 opacity-60" />
+                                                            {dayjs(manuscript.created_at).format('MMM D, YYYY')}
+                                                        </div>
+                                                        <span className="text-[10px] font-light text-neutral-500 uppercase tracking-widest">Update</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" asChild className="size-9 rounded-full hover:bg-primary/10 hover:text-primary transition-all">
+                                                        <Link href={`/author/submissions/${manuscript.id}`}>
+                                                            <ArrowUpRight className="size-4" />
                                                         </Link>
                                                     </Button>
                                                 </TableCell>
@@ -184,9 +185,11 @@ export default function Index({ manuscripts }: Props) {
                                     )}
                                 </TableBody>
                             </Table>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+
+                    <Pagination links={manuscripts.links} />
+                </div>
             </div>
         </AppLayout>
     );

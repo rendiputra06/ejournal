@@ -1,5 +1,6 @@
 import { AppContent } from '@/components/app-content';
 import { AppHeader } from '@/components/app-header';
+import { Breadcrumbs } from '@/components/breadcrumbs';
 import { AppShell } from '@/components/app-shell';
 import { type BreadcrumbItem } from '@/types';
 
@@ -12,7 +13,14 @@ export default function AppHeaderLayout({ children, breadcrumbs }: AppHeaderLayo
     return (
         <AppShell>
             <AppHeader breadcrumbs={breadcrumbs} />
-            <AppContent>{children}</AppContent>
+            <AppContent>
+                {breadcrumbs && breadcrumbs.length > 0 && (
+                    <div className="mb-4">
+                        <Breadcrumbs breadcrumbs={breadcrumbs} />
+                    </div>
+                )}
+                {children}
+            </AppContent>
         </AppShell>
     );
 }

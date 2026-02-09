@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { LoadingButton } from '@/components/loading-button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -97,8 +98,8 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             </div>
                         )}
 
-                        <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save</Button>
+                        <div className="flex items-center gap-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                            <LoadingButton loading={processing}>Save Changes</LoadingButton>
 
                             <Transition
                                 show={recentlySuccessful}
@@ -107,7 +108,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 leave="transition ease-in-out"
                                 leaveTo="opacity-0"
                             >
-                                <p className="text-sm text-gray-600">Saved</p>
+                                <p className="text-sm text-emerald-600 font-medium">Saved successfully!</p>
                             </Transition>
                         </div>
                     </form>

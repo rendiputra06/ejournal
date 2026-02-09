@@ -1,29 +1,23 @@
 import React from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-    FileText,
-    Search,
-    Filter,
-    ChevronRight,
-    Clock,
-    CheckCircle2,
-    AlertCircle,
-    MoreHorizontal,
-    Mail,
-    ArrowUpRight,
-    Users,
-    Layers,
-    BookOpen
-} from 'lucide-react';
+import { FileText, MoreHorizontal, Inbox, Calendar, User, ArrowUpRight } from 'lucide-react';
 import dayjs from 'dayjs';
 import { type BreadcrumbItem } from '@/types';
+import { PageHeader } from '@/components/page-header';
+import { StatusBadge } from '@/components/status-badge';
+import Pagination from '@/components/pagination';
 import { cn } from '@/lib/utils';
+
+interface Author {
+    id: number;
+    name: string;
+    email: string;
+    is_primary: boolean;
+}
 
 interface Manuscript {
     id: number;
@@ -32,151 +26,112 @@ interface Manuscript {
     category: string;
     status: string;
     created_at: string;
-    user: {
-        name: string;
-    };
-    authors: {
-        name: string;
-    }[];
+    authors: Author[];
 }
 
 interface Props {
-    manuscripts: Manuscript[];
+    manuscripts: {
+        data: Manuscript[];
+        links: { url: string | null; label: string; active: boolean }[];
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Submissions', href: '/editorial/submissions' },
+    { title: 'Home', href: '/dashboard' },
+    { title: 'Editorial Dashboard', href: '/editorial/submissions' },
 ];
 
-const getStatusBadge = (status: string) => {
-    switch (status) {
-        case 'submitted': return <Badge className="bg-blue-100 text-blue-700 border-blue-200">New Submission</Badge>;
-        case 'screening': return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Screening</Badge>;
-        case 'reviewing': return <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200">Peer Review</Badge>;
-        case 'final_decision': return <Badge className="bg-green-100 text-green-700 border-green-200">Final Decision</Badge>;
-        case 'published': return <Badge className="bg-emerald-500 text-white font-bold">Published</Badge>;
-        case 'archived': return <Badge variant="secondary">Archived</Badge>;
-        default: return <Badge variant="outline">{status}</Badge>;
-    }
-};
-
 export default function EditorialIndex({ manuscripts }: Props) {
-    const stats = [
-        { label: 'Total active', value: manuscripts.filter(m => m.status !== 'archived').length, icon: FileText, color: 'text-primary' },
-        { label: 'New', value: manuscripts.filter(m => m.status === 'submitted').length, icon: Mail, color: 'text-blue-500' },
-        { label: 'In Review', value: manuscripts.filter(m => m.status === 'reviewing').length, icon: Search, color: 'text-amber-500' },
-        { label: 'Published', value: manuscripts.filter(m => m.status === 'published').length, icon: BookOpen, color: 'text-emerald-500' },
-    ];
-
     return (
-        <AppLayout title="Editorial Submissions" breadcrumbs={breadcrumbs}>
-            <Head title="Manuscript Management" />
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Editorial Workflow" />
 
-            <div className="flex-1 p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Manuscript Management</h1>
-                        <p className="text-muted-foreground mt-1">Review, assign, and manage journal submissions.</p>
-                    </div>
-                </div>
+            <div className="flex-1 p-4 md:p-6 lg:p-8">
+                <div className="max-w-7xl mx-auto">
+                    <PageHeader
+                        title="Editorial Workflow"
+                        description="Review new submissions, manage the peer-review process, and make final publication decisions."
+                    />
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {stats.map((stat, i) => (
-                        <Card key={i} className="border-sidebar-border/50 shadow-sm overflow-hidden group hover:border-primary/50 transition-colors">
-                            <CardContent className="p-4 flex items-center gap-4">
-                                <div className={cn("p-2 rounded-xl bg-muted group-hover:bg-primary/5 transition-colors", stat.color)}>
-                                    <stat.icon className="size-5" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest leading-none">{stat.label}</p>
-                                    <p className="text-xl font-bold mt-1">{stat.value}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-                <Card className="border-sidebar-border/50 shadow-sm">
-                    <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4">
-                        <div className="space-y-1">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Layers className="size-5 text-primary" />
-                                Submission Queue
-                            </CardTitle>
-                            <CardDescription>Listing all manuscripts currently in the editorial workflow.</CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="relative w-64">
-                                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                                <Input placeholder="Search titles..." className="pl-9 h-9 rounded-full bg-muted/50 border-none focus-visible:ring-1" />
-                            </div>
-                            <Button variant="outline" size="sm" className="rounded-full h-9">
-                                <Filter className="size-4 mr-2" /> Filter
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="px-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="hover:bg-transparent border-sidebar-border/50">
-                                    <TableHead className="w-[120px] pl-6 font-bold uppercase text-[10px] tracking-widest">ID</TableHead>
-                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest text-left">Article Info</TableHead>
-                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center">Category</TableHead>
-                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center">Status</TableHead>
-                                    <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center">Date</TableHead>
-                                    <TableHead className="w-[80px] pr-6"></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {manuscripts.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">
-                                            No manuscripts found in the queue.
-                                        </TableCell>
+                    <Card className="border-none shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 overflow-hidden bg-background/50 backdrop-blur-sm">
+                        <CardContent className="p-0">
+                            <Table>
+                                <TableHeader className="bg-neutral-50/50 dark:bg-neutral-900/50">
+                                    <TableRow className="hover:bg-transparent border-neutral-100 dark:border-neutral-800">
+                                        <TableHead className="w-[140px] text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4">Submission ID</TableHead>
+                                        <TableHead className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4">Manuscript Details</TableHead>
+                                        <TableHead className="w-[180px] text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4 text-center">Current Status</TableHead>
+                                        <TableHead className="w-[180px] text-right text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4">Timeline</TableHead>
+                                        <TableHead className="w-[100px] text-right text-[11px] font-bold uppercase tracking-wider text-neutral-500 py-4 sr-only">Actions</TableHead>
                                     </TableRow>
-                                ) : (
-                                    manuscripts.map((ms) => (
-                                        <TableRow key={ms.id} className="group hover:bg-muted/5 transition-colors border-sidebar-border/30">
-                                            <TableCell className="font-mono text-[10px] text-muted-foreground uppercase pl-6">
-                                                {ms.external_id || `#MS-${ms.id}`}
-                                            </TableCell>
-                                            <TableCell className="text-left">
-                                                <div className="flex flex-col gap-0.5 max-w-[400px]">
-                                                    <span className="font-bold line-clamp-1 group-hover:text-primary transition-colors">
-                                                        {ms.title}
-                                                    </span>
-                                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                                        <Users className="size-3" />
-                                                        {ms.authors[0]?.name}{ms.authors.length > 1 ? ' et al.' : ''}
-                                                    </span>
+                                </TableHeader>
+                                <TableBody>
+                                    {manuscripts.data.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-72 text-center text-muted-foreground">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <Inbox className="size-12 opacity-10 mb-2" />
+                                                    <p className="text-xl font-light">Your editorial inbox is clear.</p>
+                                                    <p className="text-sm text-neutral-400">No manuscripts currently require your attention.</p>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant="outline" className="text-[9px] uppercase font-medium border-sidebar-border/50 opacity-80">
-                                                    {ms.category.replace('_', ' ')}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                {getStatusBadge(ms.status)}
-                                            </TableCell>
-                                            <TableCell className="text-center text-xs text-muted-foreground font-medium whitespace-nowrap">
-                                                {dayjs(ms.created_at).format('MMM DD, YYYY')}
-                                            </TableCell>
-                                            <TableCell className="text-right pr-6">
-                                                <Button variant="ghost" size="icon" asChild className="size-8 rounded-full hover:bg-primary/10 hover:text-primary transition-all">
-                                                    <Link href={route('editorial.submissions.show', ms.id)}>
-                                                        <ArrowUpRight className="size-4" />
-                                                    </Link>
-                                                </Button>
-                                            </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                                    ) : (
+                                        manuscripts.data.map((manuscript) => (
+                                            <TableRow key={manuscript.id} className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30 border-neutral-100 dark:border-neutral-800 transition-colors">
+                                                <TableCell className="py-5">
+                                                    <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded ring-1 ring-neutral-200 dark:ring-neutral-700">
+                                                        {manuscript.external_id || `#${manuscript.id}`}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col gap-1 max-w-[500px]">
+                                                        <span className="font-bold text-sm text-neutral-900 dark:text-neutral-100 leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                            {manuscript.title}
+                                                        </span>
+                                                        <div className="flex items-center gap-3 mt-1">
+                                                            <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium">
+                                                                <User className="size-3 opacity-60" />
+                                                                {manuscript.authors.find(a => a.is_primary)?.name || manuscript.authors[0]?.name || 'Unknown Author'}
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium uppercase tracking-tighter">
+                                                                <FileText className="size-3 opacity-60" />
+                                                                {manuscript.category.replace(/_/g, ' ')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <div className="flex justify-center">
+                                                        <StatusBadge status={manuscript.status} />
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                                                            <Calendar className="size-3 opacity-60" />
+                                                            {dayjs(manuscript.created_at).format('MMM D, YYYY')}
+                                                        </div>
+                                                        <span className="text-[10px] font-light text-neutral-500 uppercase tracking-widest">Received</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" asChild className="size-9 rounded-full hover:bg-primary/10 hover:text-primary transition-all group/btn">
+                                                        <Link href={`/editorial/submissions/${manuscript.id}`}>
+                                                            <ArrowUpRight className="size-4 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                                                        </Link>
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+
+                    <Pagination links={manuscripts.links} />
+                </div>
             </div>
         </AppLayout>
     );

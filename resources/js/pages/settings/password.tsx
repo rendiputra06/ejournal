@@ -10,6 +10,7 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingButton } from '@/components/loading-button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -107,8 +108,8 @@ export default function Password() {
                             <InputError message={errors.password_confirmation} />
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save password</Button>
+                        <div className="flex items-center gap-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                            <LoadingButton loading={processing}>Update Password</LoadingButton>
 
                             <Transition
                                 show={recentlySuccessful}
@@ -117,7 +118,7 @@ export default function Password() {
                                 leave="transition ease-in-out"
                                 leaveTo="opacity-0"
                             >
-                                <p className="text-sm text-gray-600">Saved</p>
+                                <p className="text-sm text-emerald-600 font-medium">Password updated successfully!</p>
                             </Transition>
                         </div>
                     </form>

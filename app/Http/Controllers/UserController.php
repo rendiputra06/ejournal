@@ -11,12 +11,22 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->latest()->paginate(10);
+        $role = $request->query('role');
+        $query = User::with('roles')->latest();
+
+        if ($role) {
+            $query->role($role);
+        }
+
+        $users = $query->paginate(10);
 
         return Inertia::render('users/Index', [
             'users' => $users,
+            'filters' => [
+                'role' => $role,
+            ],
         ]);
     }
 

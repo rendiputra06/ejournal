@@ -101,7 +101,7 @@
     --chart-3: hsl(197, 37%, 24%);
     --chart-4: hsl(43, 74%, 66%);
     --chart-5: hsl(27, 87%, 67%);
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --sidebar-background: hsl(215, 50%, 98%);
     --sidebar-foreground: hsl(215, 50%, 23%);
     --sidebar-primary: hsl(215, 50%, 23%);
@@ -148,7 +148,7 @@
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground antialiased;
     }
 }
 @layer utilities {
@@ -158,5 +158,13 @@
     .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
+    }
+
+    .glass {
+        @apply bg-white/70 dark:bg-black/70 backdrop-blur-xl border border-white/20 dark:border-white/10;
+    }
+
+    .soft-shadow-premium {
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
     }
 }
