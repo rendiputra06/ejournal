@@ -13,7 +13,11 @@ declare global {
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => {
+        const sharedData = (window as any).initialPage?.props as any;
+        const dynamicName = sharedData?.setting?.nama_app || appName;
+        return title ? `${title} - ${dynamicName}` : dynamicName;
+    },
     resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
     setup({ el, App, props }) {
         const root = createRoot(el);

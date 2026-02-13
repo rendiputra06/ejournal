@@ -1,8 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Newspaper, Info } from 'lucide-react';
 import dayjs from 'dayjs';
 import PublicLayout from '@/layouts/public-layout';
+import { type SharedData } from '@/types';
 
 interface Issue {
   id: number;
@@ -34,24 +35,31 @@ interface WelcomeProps {
   stats?: {
     totalArticles: number;
     totalAuthors: number;
+    totalVisitors: number;
   };
 }
 
 export default function Welcome({ currentIssue, announcements, stats }: WelcomeProps) {
+  const { props } = usePage<SharedData>();
+  const setting = props.setting as any;
+
   return (
     <PublicLayout>
-      <Head title="Journal System" />
+      <Head>
+        <title>{setting?.nama_app || 'Journal System'}</title>
+        {setting?.seo?.description && <meta name="description" content={setting.seo.description} />}
+        {setting?.seo?.keywords && <meta name="keywords" content={setting.seo.keywords} />}
+      </Head>
 
       {/* Hero Section */}
       <header className="bg-primary text-primary-foreground py-16 lg:py-24 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight">
-              Advancing Knowledge Through Open Academic Exchange
+              {setting?.nama_app || 'Advancing Knowledge Through Open Academic Exchange'}
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 font-light leading-relaxed">
-              A premier international journal dedicated to publishing high-quality research,
-              fostering innovation, and providing a platform for scholars worldwide.
+              {setting?.deskripsi || 'A premier international journal dedicated to publishing high-quality research, fostering innovation, and providing a platform for scholars worldwide.'}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href={route('author.submissions.create')}>
@@ -95,7 +103,7 @@ export default function Welcome({ currentIssue, announcements, stats }: WelcomeP
                   <div className="w-full md:w-1/3 aspect-[3/4] bg-muted rounded-lg flex items-center justify-center overflow-hidden border">
                     <div className="text-center p-6 space-y-4">
                       <div className="w-12 h-1 bg-secondary mx-auto"></div>
-                      <p className="font-serif font-bold text-lg">Journal of Applied Sciences</p>
+                      <p className="font-serif font-bold text-lg">{setting?.nama_app || 'Journal of Applied Sciences'}</p>
                       <p className="text-xs uppercase tracking-widest text-muted-foreground">Volume {currentIssue.volume_id} • Issue {currentIssue.number}</p>
                     </div>
                   </div>
@@ -173,9 +181,7 @@ export default function Welcome({ currentIssue, announcements, stats }: WelcomeP
                 About the Journal
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                The Journal System is a peer-reviewed open access journal. We provide immediate
-                open access to its content on the principle that making research freely available
-                to the public supports a greater global exchange of knowledge.
+                {setting?.deskripsi || `${setting?.nama_app || 'The Journal System'} is a peer-reviewed open access journal. We provide immediate open access to its content on the principle that making research freely available to the public supports a greater global exchange of knowledge.`}
               </p>
               <Link href={route('journal.about')} className="text-sm font-bold text-primary hover:underline">
                 Learn more about our mission →
@@ -203,6 +209,10 @@ export default function Welcome({ currentIssue, announcements, stats }: WelcomeP
                 <div>
                   <p className="text-2xl font-serif font-bold text-primary">{stats?.totalAuthors ?? 0}</p>
                   <p className="text-xs text-muted-foreground">Registered Authors</p>
+                </div>
+                <div className="pt-4 border-t">
+                  <p className="text-2xl font-serif font-bold text-primary">{stats?.totalVisitors ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">Total Visitors</p>
                 </div>
               </div>
             </section>

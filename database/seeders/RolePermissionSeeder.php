@@ -59,6 +59,9 @@ class RolePermissionSeeder extends Seeder
                 'files.index',
                 'media.index',
             ],
+            'Analytics' => [
+                'analytics.visitors',
+            ],
         ];
 
         foreach ($permissions as $group => $perms) {

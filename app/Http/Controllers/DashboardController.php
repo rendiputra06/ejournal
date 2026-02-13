@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User; // Added
 use App\Models\Issue; // Added
+use App\Models\Announcement; // Added
+use App\Models\ManuscriptAssignment; // Added
+use App\Models\Visitor; // Added
 use Illuminate\Support\Facades\DB; // Added
 
 class DashboardController extends Controller
@@ -22,26 +25,18 @@ class DashboardController extends Controller
 
         // Common Data for All Roles
         $data['common'] = [
-            'announcements' => [
-                [
-                    'id' => 1,
-                    'title' => 'Call for Papers: Special Issue on AI',
-                    'date' => now()->subDays(2)->format('M d, Y'),
-                    'content' => 'We are inviting submissions for our upcoming special issue...'
-                ],
-                [
-                    'id' => 2,
-                    'title' => 'System Maintenance Scheduled',
-                    'date' => now()->subDays(5)->format('M d, Y'),
-                    'content' => 'The platform will undergo maintenance on Sunday...'
-                ],
-                [
-                    'id' => 3,
-                    'title' => 'New Reviewer Guidelines',
-                    'date' => now()->subWeeks(1)->format('M d, Y'),
-                    'content' => 'Updated guidelines for peer review process are now available...'
-                ]
-            ],
+            'announcements' => Announcement::where('published_at', '<=', now())
+                ->orderBy('published_at', 'desc')
+                ->limit(3)
+                ->get()
+                ->map(function ($a) {
+                    return [
+                        'id' => $a->id,
+                        'title' => $a->title,
+                        'date' => $a->published_at->format('M d, Y'),
+                        'content' => \Illuminate\Support\Str::limit($a->content, 100)
+                    ];
+                }),
             'latestArticles' => Manuscript::where('status', 'published')
                 ->orderBy('updated_at', 'desc')
                 ->limit(3)
@@ -84,13 +79,22 @@ class DashboardController extends Controller
                 ];
             }
 
+            $visitorStats = Visitor::select('country', DB::raw('count(*) as count'))
+                ->where('created_at', '>=', now()->subMonths(6))
+                ->groupBy('country')
+                ->orderBy('count', 'desc')
+                ->limit(5)
+                ->get();
+
             $data['manager'] = [
                 'stats' => [
                     'totalUsers' => User::count(),
                     'publishedIssues' => Issue::where('status', 'published')->count(),
                     'totalSubmissions' => Manuscript::count(),
+                    'totalVisitors' => Visitor::count(),
                 ],
-                'activityData' => $activityChart
+                'activityData' => $activityChart,
+                'visitorData' => $visitorStats
             ];
         }
 
@@ -105,7 +109,10 @@ class DashboardController extends Controller
                     'newSubmissions' => Manuscript::where('status', 'submitted')->count(),
                     'underReview' => Manuscript::where('status', 'reviewing')->count(),
                     'pendingDecisions' => Manuscript::whereIn('status', ['screening', 'review_completed'])->count(),
-                    'overdueReviews' => 0,
+                    'overdueReviews' => ManuscriptAssignment::where('role', 'reviewer')
+                        ->whereIn('status', ['pending', 'accepted'])
+                        ->where('due_date', '<', now())
+                        ->count(),
                 ],
                 'pendingAssignments' => Manuscript::with(['authors' => function ($q) {
                     $q->where('is_primary', true);
@@ -168,7 +175,10 @@ class DashboardController extends Controller
                         ->whereIn('status', ['submitted', 'screening', 'reviewing'])
                         ->count(),
                     'published' => Manuscript::where('user_id', Auth::id())
-                        ->where('status', 'final_decision')
+                        ->where('status', 'published')
+                        ->count(),
+                    'rejected' => Manuscript::where('user_id', Auth::id())
+                        ->where('status', 'rejected')
                         ->count(),
                 ],
                 'activityData' => $activityChart
@@ -177,7 +187,63 @@ class DashboardController extends Controller
 
         // 4. Reviewer Data
         if ($user->hasRole('reviewer')) {
-            $data['reviewer'] = true;
+            $assignments = ManuscriptAssignment::where('user_id', $user->id)
+                ->where('role', 'reviewer')
+                ->with('manuscript')
+                ->get();
+
+            $pending = $assignments->whereIn('status', ['pending', 'accepted']);
+            $completed = $assignments->where('status', 'completed');
+            $overdue = $pending->filter(function ($a) {
+                return $a->due_date && $a->due_date->isPast();
+            });
+
+            // Activity Chart (Reviews completed per month for past 6 months)
+            $activityData = ManuscriptAssignment::select(
+                DB::raw('count(id) as activity'),
+                DB::raw("DATE_FORMAT(updated_at, '%b') as month"),
+                DB::raw('MAX(updated_at) as updated_at')
+            )
+                ->where('user_id', $user->id)
+                ->where('role', 'reviewer')
+                ->where('status', 'completed')
+                ->where('updated_at', '>=', now()->subMonths(6))
+                ->groupBy('month')
+                ->orderBy('updated_at')
+                ->get();
+
+            $months = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $months[] = now()->subMonths($i)->format('M');
+            }
+
+            $activityChart = [];
+            foreach ($months as $m) {
+                $found = $activityData->firstWhere('month', $m);
+                $activityChart[] = [
+                    'month' => $m,
+                    'activity' => $found ? $found->activity : 0
+                ];
+            }
+
+            $data['reviewer'] = [
+                'stats' => [
+                    'pendingReviews' => $pending->count(),
+                    'completedReviews' => $completed->count(),
+                    'overdueReviews' => $overdue->count(),
+                    'activeInvitations' => $assignments->where('status', 'pending')->count(),
+                ],
+                'activeAssignments' => $pending->take(5)->map(function ($a) {
+                    return [
+                        'id' => $a->id,
+                        'manuscript_id' => $a->manuscript_id,
+                        'title' => $a->manuscript->title,
+                        'due_date' => $a->due_date ? $a->due_date->format('M d, Y') : 'No Date',
+                        'status' => $a->status,
+                    ];
+                })->values(),
+                'activityData' => $activityChart
+            ];
         }
 
         // 5. Reader Data
@@ -202,8 +268,13 @@ class DashboardController extends Controller
              ];
         }
 
+        $roles = $user->getRoleNames()->toArray();
+        if ($user->hasRole('admin') && !in_array('journal-manager', $roles)) {
+            $roles[] = 'journal-manager';
+        }
+
         return Inertia::render('dashboard/index', [
-            'roles' => $user->getRoleNames(),
+            'roles' => $roles,
             'data' => $data
         ]);
     }

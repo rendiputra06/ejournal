@@ -3,11 +3,15 @@
 namespace Tests\Feature\Auth;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
+    
+    protected $seed = true;
+    protected $seeder = \Database\Seeders\RolePermissionSeeder::class;
 
     public function test_registration_screen_can_be_rendered()
     {
@@ -18,6 +22,8 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register()
     {
+        Notification::fake();
+
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -25,6 +31,7 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
+        $this->assertDatabaseCount('users', 1);
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
     }

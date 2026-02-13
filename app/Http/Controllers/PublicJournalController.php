@@ -36,6 +36,7 @@ class PublicJournalController extends Controller
         $stats = [
             'totalArticles' => Manuscript::where('status', 'final_decision')->count(),
             'totalAuthors' => User::role('author')->count(),
+            'totalVisitors' => \App\Models\Visitor::count(),
             // Add more stats as needed
         ];
 

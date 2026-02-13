@@ -10,7 +10,9 @@ interface PublicLayoutProps {
 }
 
 export default function PublicLayout({ children }: PublicLayoutProps) {
-    const { auth } = usePage<SharedData>().props;
+    const { props } = usePage<SharedData>();
+    const setting = props.setting as any;
+    const { auth } = props;
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleSearch = (e: React.FormEvent) => {
@@ -31,7 +33,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                                     <BookOpen className="w-5 h-5 text-primary-foreground" />
                                 </div>
-                                <span className="text-xl font-serif font-bold tracking-tight text-primary">JournalSystem</span>
+                                <span className="text-xl font-serif font-bold tracking-tight text-primary">{setting?.nama_app || 'JournalSystem'}</span>
                             </Link>
                             <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
                                 <Link href={route('journal.current')} className="hover:text-primary transition-colors">Current</Link>
@@ -85,11 +87,10 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         <div className="col-span-1 md:col-span-2 space-y-6">
                             <div className="flex items-center gap-2 text-white">
                                 <BookOpen className="w-8 h-8" />
-                                <span className="text-2xl font-serif font-bold">JournalSystem</span>
+                                <span className="text-2xl font-serif font-bold">{setting?.nama_app || 'JournalSystem'}</span>
                             </div>
                             <p className="max-w-md text-sm leading-relaxed">
-                                Empowering societies through high-quality research and open knowledge dissemination.
-                                An official publication of the Academic Research Institute.
+                                {setting?.deskripsi || 'Empowering societies through high-quality research and open knowledge dissemination.'}
                             </p>
                         </div>
                         <div className="space-y-4">
@@ -111,7 +112,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         </div>
                     </div>
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-                        <p>© {new Date().getFullYear()} Journal System. All rights reserved.</p>
+                        <p>© {new Date().getFullYear()} {setting?.nama_app || 'Journal System'}. All rights reserved.</p>
                         <p>Powered by Open Journal System (OJS) Design Principles</p>
                     </div>
                 </div>

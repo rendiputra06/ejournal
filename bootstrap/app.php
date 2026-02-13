@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             ShareMenus::class,
+            \App\Http\Middleware\LogVisitor::class,
         ]);
 
         $middleware->trustProxies(at: '*');

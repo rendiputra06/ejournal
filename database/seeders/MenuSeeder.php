@@ -60,6 +60,13 @@ class MenuSeeder extends Seeder
                         'order' => 4,
                         'permission_name' => 'editorial-issues-view', // Using existing editorial permission
                     ],
+                    [
+                        'title' => 'Visitor Analytics',
+                        'icon' => 'BarChart2',
+                        'route' => '/analytics/visitors',
+                        'order' => 5,
+                        'permission_name' => 'analytics.visitors',
+                    ],
                 ]
             ],
             [

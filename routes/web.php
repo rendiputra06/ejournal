@@ -22,6 +22,7 @@ use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\PublicJournalController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\UserManualController;
+use App\Http\Controllers\VisitorController;
 
 Route::get('/', [PublicJournalController::class, 'welcome'])->name('home');
 
@@ -91,6 +92,9 @@ Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     });
 
     Route::get('/guides', [UserManualController::class, 'index'])->name('guides.index');
+    
+    // Analytics Routes
+    Route::get('/analytics/visitors', [VisitorController::class, 'index'])->name('analytics.visitors');
 });
 
 require __DIR__ . '/settings.php';

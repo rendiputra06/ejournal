@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Load Mail Config from Database
         try {
-            if (Schema::hasTable('settingapp')) {
+            if (!app()->runningUnitTests() && Schema::hasTable('settingapp')) {
                 $setting = SettingApp::first();
                 if ($setting && $setting->mail_host) {
                     $config = [
@@ -54,8 +54,13 @@ class AppServiceProvider extends ServiceProvider
                         'local_domain' => env('MAIL_EHLO_DOMAIN'),
                     ];
                     Config::set('mail.mailers.smtp', array_merge(Config::get('mail.mailers.smtp') ?? [], $config));
-                    Config::set('mail.from.address', $setting->mail_from_address);
-                    Config::set('mail.from.name', $setting->mail_from_name);
+                    
+                    if ($setting->mail_from_address) {
+                        Config::set('mail.from.address', $setting->mail_from_address);
+                    }
+                    if ($setting->mail_from_name) {
+                        Config::set('mail.from.name', $setting->mail_from_name);
+                    }
                 }
             }
         } catch (\Exception $e) {
