@@ -361,7 +361,7 @@ export default function VisitorAnalytics({ visitors, stats, visitorsOverTime, to
                                             <SelectValue placeholder="All Countries" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">All Countries</SelectItem>
+                                            <SelectItem value="all">All Countries</SelectItem>
                                             {countries.map((country) => (
                                                 <SelectItem key={country} value={country}>
                                                     {country}

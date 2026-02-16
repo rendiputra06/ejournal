@@ -181,7 +181,7 @@ class ManuscriptSeeder extends Seeder
 
                     if ($assignment->status === 'completed') {
                         ManuscriptReview::create([
-                            'manuscript_assignment_id' => $assignment->id,
+                            'assignment_id' => $assignment->id,
                             'relevance_score' => rand(4, 5),
                             'novelty_score' => rand(3, 5),
                             'methodology_score' => rand(4, 5),

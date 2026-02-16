@@ -30,8 +30,16 @@ import {
     XCircle,
     BookOpen,
     Hash,
-    ExternalLink
+    ExternalLink,
+    Eye
 } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -111,6 +119,7 @@ interface Props {
     editors: User[];
     reviewers: User[];
     issues: Issue[];
+    auth_user_role: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -130,7 +139,7 @@ const getStatusConfig = (status: string) => {
     }
 };
 
-export default function EditorialShow({ manuscript, editors, reviewers, issues }: Props) {
+export default function EditorialShow({ manuscript, editors, reviewers, issues, auth_user_role }: Props) {
     const status = getStatusConfig(manuscript.status);
     const StatusIcon = status.icon;
 
@@ -215,10 +224,30 @@ export default function EditorialShow({ manuscript, editors, reviewers, issues }
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" className="shadow-sm">
-                            <Download className="mr-2 size-4" />
-                            Download Manuscript
+                    <div className="flex items-center gap-2">
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="shadow-sm gap-1.5 h-9 rounded-full px-4 border-primary/20 text-primary hover:bg-primary/5">
+                                    <Eye className="size-4" /> Preview
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
+                                <DialogHeader className="p-4 border-b">
+                                    <DialogTitle>Manuscript Preview: {manuscript.title}</DialogTitle>
+                                </DialogHeader>
+                                <div className="flex-1 bg-muted/20">
+                                    <iframe
+                                        src={route('manuscripts.file.view', manuscript.id)}
+                                        className="w-full h-full border-none"
+                                        title="PDF Preview"
+                                    />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                        <Button variant="outline" className="shadow-sm gap-1.5 h-9 rounded-full px-4" asChild>
+                            <a href={route('manuscripts.file.download', manuscript.id)}>
+                                <Download className="size-4" /> Download
+                            </a>
                         </Button>
                     </div>
                 </div>
@@ -337,9 +366,11 @@ export default function EditorialShow({ manuscript, editors, reviewers, issues }
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-muted-foreground uppercase">Keywords</Label>
                                         <div className="flex flex-wrap gap-2">
-                                            {manuscript.keywords.split(',').map((k, i) => (
+                                            {manuscript.keywords ? manuscript.keywords.split(',').map((k, i) => (
                                                 <Badge key={i} variant="secondary" className="font-medium">{k.trim()}</Badge>
-                                            ))}
+                                            )) : (
+                                                <span className="text-xs text-muted-foreground italic">No keywords provided.</span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -485,7 +516,7 @@ export default function EditorialShow({ manuscript, editors, reviewers, issues }
                                             required
                                         >
                                             <option value="">-- Choose Reviewer --</option>
-                                            {reviewers.map(r => (
+                                            {reviewers.filter(r => !manuscript.assignments.some(a => a.user.id === r.id && a.role === 'reviewer')).map(r => (
                                                 <option key={r.id} value={r.id}>{r.name} ({r.email})</option>
                                             ))}
                                         </select>
@@ -511,43 +542,45 @@ export default function EditorialShow({ manuscript, editors, reviewers, issues }
                         </Card>
 
                         {/* Section Editor Assignment */}
-                        <Card className="border-sidebar-border/50 shadow-sm overflow-hidden">
-                            <CardHeader>
-                                <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest text-muted-foreground opacity-50">
-                                    <ShieldCheck className="size-4" />
-                                    Accountable Editor
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {manuscript.section_editor ? (
-                                    <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-sidebar-border/50">
-                                        <div className="size-8 rounded-full bg-background flex items-center justify-center font-bold text-[10px] border shadow-sm">
-                                            {manuscript.section_editor.name.substring(0, 2).toUpperCase()}
+                        {auth_user_role !== 'editor' && (
+                            <Card className="border-sidebar-border/50 shadow-sm overflow-hidden">
+                                <CardHeader>
+                                    <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest text-muted-foreground opacity-50">
+                                        <ShieldCheck className="size-4" />
+                                        Accountable Editor
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {manuscript.section_editor ? (
+                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-sidebar-border/50">
+                                            <div className="size-8 rounded-full bg-background flex items-center justify-center font-bold text-[10px] border shadow-sm">
+                                                {manuscript.section_editor.name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="text-[11px] font-bold leading-none">{manuscript.section_editor.name}</p>
+                                                <p className="text-[9px] text-muted-foreground mt-0.5">Section Editor</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-[11px] font-bold leading-none">{manuscript.section_editor.name}</p>
-                                            <p className="text-[9px] text-muted-foreground mt-0.5">Section Editor</p>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <form onSubmit={handleAssignment} className="space-y-4">
-                                        <select
-                                            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                                            value={assignmentForm.data.editor_id}
-                                            onChange={e => assignmentForm.setData('editor_id', e.target.value)}
-                                        >
-                                            <option value="">-- Choose Editor --</option>
-                                            {editors.map(editor => (
-                                                <option key={editor.id} value={editor.id}>{editor.name}</option>
-                                            ))}
-                                        </select>
-                                        <Button type="submit" variant="outline" className="w-full h-10 rounded-full text-xs" disabled={!assignmentForm.data.editor_id}>
-                                            Assign Now
-                                        </Button>
-                                    </form>
-                                )}
-                            </CardContent>
-                        </Card>
+                                    ) : (
+                                        <form onSubmit={handleAssignment} className="space-y-4">
+                                            <select
+                                                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                                                value={assignmentForm.data.editor_id}
+                                                onChange={e => assignmentForm.setData('editor_id', e.target.value)}
+                                            >
+                                                <option value="">-- Choose Editor --</option>
+                                                {editors.map(editor => (
+                                                    <option key={editor.id} value={editor.id}>{editor.name}</option>
+                                                ))}
+                                            </select>
+                                            <Button type="submit" variant="outline" className="w-full h-10 rounded-full text-xs" disabled={!assignmentForm.data.editor_id}>
+                                                Assign Now
+                                            </Button>
+                                        </form>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
                 </div>
             </div>

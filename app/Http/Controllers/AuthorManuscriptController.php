@@ -96,7 +96,7 @@ class AuthorManuscriptController extends Controller
             ));
 
             // Send Alert to Editors
-            $editors = User::role(['editor', 'manager'])->get();
+            $editors = User::role(['editor', 'journal-manager'])->get();
             foreach ($editors as $editor) {
                 $editor->notify(new JournalNotification(
                     'journal_new_submission',

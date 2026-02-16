@@ -15,6 +15,7 @@ class Issue extends Model
         'year',
         'month',
         'status',
+        'cover_image_url',
     ];
 
     public function volume(): BelongsTo

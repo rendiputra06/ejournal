@@ -30,13 +30,19 @@ export const CommunitySidebar = ({ data }: { data: CommonData }) => (
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {data?.announcements?.map((item) => (
-                    <div key={item.id} className="pb-3 border-b border-neutral-100 last:border-0 last:pb-0">
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{item.date}</span>
-                        <h4 className="font-bold text-sm text-neutral-900 mt-1">{item.title}</h4>
-                        <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{item.content}</p>
+                {data?.announcements?.length > 0 ? (
+                    data.announcements.map((item) => (
+                        <div key={item.id} className="pb-3 border-b border-neutral-100 last:border-0 last:pb-0">
+                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{item.date}</span>
+                            <h4 className="font-bold text-sm text-neutral-900 mt-1">{item.title}</h4>
+                            <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{item.content}</p>
+                        </div>
+                    ))
+                ) : (
+                    <div className="py-4 text-center">
+                        <p className="text-xs text-neutral-400 italic">No recent announcements</p>
                     </div>
-                ))}
+                )}
             </CardContent>
         </Card>
 
@@ -48,17 +54,23 @@ export const CommunitySidebar = ({ data }: { data: CommonData }) => (
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {data?.latestArticles?.map((article) => (
-                    <div key={article.id} className="flex items-start gap-3 group cursor-pointer">
-                        <div className="mt-1 p-1.5 rounded-lg bg-neutral-100 text-neutral-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                            <FileText className="size-4" />
+                {data?.latestArticles?.length > 0 ? (
+                    data.latestArticles.map((article) => (
+                        <div key={article.id} className="flex items-start gap-3 group cursor-pointer">
+                            <div className="mt-1 p-1.5 rounded-lg bg-neutral-100 text-neutral-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                <FileText className="size-4" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-xs text-neutral-900 group-hover:text-primary transition-colors line-clamp-2">{article.title}</h4>
+                                <p className="text-[10px] text-neutral-500 mt-0.5">{article.author}</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 className="font-bold text-xs text-neutral-900 group-hover:text-primary transition-colors line-clamp-2">{article.title}</h4>
-                            <p className="text-[10px] text-neutral-500 mt-0.5">{article.author}</p>
-                        </div>
+                    ))
+                ) : (
+                    <div className="py-4 text-center">
+                        <p className="text-xs text-neutral-400 italic">No articles published yet</p>
                     </div>
-                ))}
+                )}
             </CardContent>
         </Card>
     </div>

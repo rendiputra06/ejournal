@@ -23,6 +23,7 @@ use App\Http\Controllers\PublicJournalController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\UserManualController;
 use App\Http\Controllers\VisitorController;
+use App\Http\Controllers\ManuscriptFileController;
 
 Route::get('/', [PublicJournalController::class, 'welcome'])->name('home');
 
@@ -32,6 +33,7 @@ Route::get('/archives', [PublicJournalController::class, 'archives'])->name('jou
 Route::get('/announcements', [PublicJournalController::class, 'announcements'])->name('journal.announcements');
 Route::get('/about', [PublicJournalController::class, 'about'])->name('journal.about');
 Route::get('/search', [PublicJournalController::class, 'search'])->name('journal.search');
+Route::get('/article/{manuscript}', [PublicJournalController::class, 'article'])->name('journal.article');
 
 Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -50,6 +52,8 @@ Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
         Route::get('issues', [IssueController::class, 'index'])->name('issues.index');
         Route::post('volumes', [IssueController::class, 'storeVolume'])->name('volumes.store');
         Route::post('issues', [IssueController::class, 'storeIssue'])->name('issues.store');
+        Route::put('volumes/{volume}', [IssueController::class, 'updateVolume'])->name('volumes.update');
+        Route::put('issues/{issue}', [IssueController::class, 'updateIssue'])->name('issues.update');
         Route::post('submissions/{manuscript}/publish', [IssueController::class, 'publishManuscript'])->name('submissions.publish');
 
         Route::resource('announcements', AnnouncementController::class);
@@ -95,6 +99,10 @@ Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     
     // Analytics Routes
     Route::get('/analytics/visitors', [VisitorController::class, 'index'])->name('analytics.visitors');
+
+    // Manuscript File Routes
+    Route::get('/manuscripts/{manuscript}/file/view', [ManuscriptFileController::class, 'view'])->name('manuscripts.file.view');
+    Route::get('/manuscripts/{manuscript}/file/download', [ManuscriptFileController::class, 'download'])->name('manuscripts.file.download');
 });
 
 require __DIR__ . '/settings.php';

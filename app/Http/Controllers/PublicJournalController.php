@@ -19,7 +19,7 @@ class PublicJournalController extends Controller
     {
         // 1. Current Issue
         $currentIssue = Issue::with(['manuscripts' => function ($q) {
-                $q->where('status', 'final_decision'); // or 'published' if status logic updated
+                $q->where('status', 'published');
             }, 'manuscripts.authors'])
             ->where('status', 'published')
             ->orderBy('year', 'desc')
@@ -34,7 +34,7 @@ class PublicJournalController extends Controller
 
         // 3. Stats (Optional)
         $stats = [
-            'totalArticles' => Manuscript::where('status', 'final_decision')->count(),
+            'totalArticles' => Manuscript::where('status', 'published')->count(),
             'totalAuthors' => User::role('author')->count(),
             'totalVisitors' => \App\Models\Visitor::count(),
             // Add more stats as needed
@@ -53,7 +53,7 @@ class PublicJournalController extends Controller
     public function current()
     {
         $currentIssue = Issue::with(['manuscripts' => function ($q) {
-                $q->where('status', 'final_decision');
+                $q->where('status', 'published');
             }, 'manuscripts.authors'])
             ->where('status', 'published')
             ->orderBy('year', 'desc')
@@ -123,6 +123,22 @@ class PublicJournalController extends Controller
         $setting = \App\Models\SettingApp::first();
         return Inertia::render('journal/about', [
             'guidelines' => $setting?->guidelines
+        ]);
+    }
+
+    /**
+     * Article Detail Page.
+     */
+    public function article(Manuscript $manuscript)
+    {
+        if ($manuscript->status !== 'published') {
+            abort(404);
+        }
+
+        $manuscript->load(['authors', 'issue.volume']);
+
+        return Inertia::render('journal/article', [
+            'article' => $manuscript,
         ]);
     }
 }

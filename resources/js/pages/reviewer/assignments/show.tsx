@@ -18,8 +18,16 @@ import {
     Download,
     MessageSquare,
     AlertCircle,
-    Star
+    Star,
+    Eye
 } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -62,8 +70,8 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Tugas Peninjauan', href: '/reviewer/assignments' },
-    { title: 'Detail Peninjauan', href: '#' },
+    { title: 'Reviewer Assignments', href: '/reviewer/assignments' },
+    { title: 'Assignment Details', href: '#' },
 ];
 
 export default function ReviewerShow({ assignment }: Props) {
@@ -95,7 +103,7 @@ export default function ReviewerShow({ assignment }: Props) {
     const handleReviewSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         reviewForm.post(route('reviewer.assignments.submit', assignment.id), {
-            onSuccess: () => toast.success('Tinjauan naskah berhasil dikirimkan.'),
+            onSuccess: () => toast.success('Manuscript review submitted successfully.'),
         });
     };
 
@@ -119,12 +127,12 @@ export default function ReviewerShow({ assignment }: Props) {
                     </button>
                 ))}
             </div>
-            <p className="text-[10px] text-muted-foreground italic">(1 = Buruk, 5 = Sangat Baik)</p>
+            <p className="text-[10px] text-muted-foreground italic">(1 = Poor, 5 = Excellent)</p>
         </div>
     );
 
     return (
-        <AppLayout title="Peninjauan Naskah" breadcrumbs={breadcrumbs}>
+        <AppLayout title="Manuscript Review" breadcrumbs={breadcrumbs}>
             <Head title={`Review: ${manuscript.title}`} />
 
             <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
@@ -135,7 +143,7 @@ export default function ReviewerShow({ assignment }: Props) {
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
                     >
                         <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
-                        Kembali ke Daftar Tugas
+                        Back to Assignment List
                     </Link>
 
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -148,7 +156,7 @@ export default function ReviewerShow({ assignment }: Props) {
                                         assignment.status === 'accepted' ? "bg-amber-100 text-amber-700" :
                                             "bg-green-100 text-green-700"
                                 )}>
-                                    {assignment.status === 'pending' ? 'Undangan' : assignment.status === 'accepted' ? 'Masa Peninjauan' : 'Selesai'}
+                                    {assignment.status === 'pending' ? 'Invitation' : assignment.status === 'accepted' ? 'Reviewing' : 'Completed'}
                                 </Badge>
                             </div>
                             <h1 className="text-2xl font-bold tracking-tight">{manuscript.title}</h1>
@@ -157,12 +165,35 @@ export default function ReviewerShow({ assignment }: Props) {
                         <div className="flex flex-col items-end gap-1">
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                                 <Calendar className="size-3.5" />
-                                Batas Waktu:
+                                Deadline:
                                 <span className="text-foreground font-bold">{assignment.due_date ? dayjs(assignment.due_date).format('DD MMM YYYY') : '-'}</span>
                             </div>
-                            <Button variant="outline" size="sm" className="rounded-full h-8 px-4 mt-2">
-                                <Download className="size-3.5 mr-2" /> Unduh Naskah
-                            </Button>
+                            <div className="flex items-center gap-2 mt-2">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm" className="rounded-full h-8 px-4 border-primary/20 text-primary hover:bg-primary/5">
+                                            <Eye className="size-3.5 mr-2" /> Preview
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
+                                        <DialogHeader className="p-4 border-b">
+                                            <DialogTitle>Manuscript Preview: {manuscript.title}</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="flex-1 bg-muted/20">
+                                            <iframe
+                                                src={route('manuscripts.file.view', manuscript.id)}
+                                                className="w-full h-full border-none"
+                                                title="PDF Preview"
+                                            />
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button variant="outline" size="sm" className="rounded-full h-8 px-4" asChild>
+                                    <a href={route('manuscripts.file.download', manuscript.id)}>
+                                        <Download className="size-3.5 mr-2" /> Download Manuscript
+                                    </a>
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -172,10 +203,10 @@ export default function ReviewerShow({ assignment }: Props) {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-primary">
                                 <Info className="size-5" />
-                                Konfirmasi Undangan Peninjauan
+                                Review Invitation Confirmation
                             </CardTitle>
                             <CardDescription className="text-primary/70">
-                                Anda telah diundang untuk memberikan tinjauan sejawat terhadap naskah ini. Harap beri tahu kami apakah Anda bersedia melakukannya.
+                                You have been invited to perform a peer review for this manuscript. Please let us know if you are able to do so.
                             </CardDescription>
                         </CardHeader>
                         <CardFooter className="flex gap-3">
@@ -184,7 +215,7 @@ export default function ReviewerShow({ assignment }: Props) {
                                 className="rounded-full px-8 shadow-lg shadow-primary/20 font-bold"
                                 disabled={responseForm.processing}
                             >
-                                <CheckCircle2 className="mr-2 size-4" /> Bersedia Meninjau
+                                <CheckCircle2 className="mr-2 size-4" /> Accept Invitation
                             </Button>
                             <Button
                                 variant="outline"
@@ -192,7 +223,7 @@ export default function ReviewerShow({ assignment }: Props) {
                                 className="rounded-full px-6 border-primary/20 text-primary hover:bg-primary/10 font-bold"
                                 disabled={responseForm.processing}
                             >
-                                <XCircle className="mr-2 size-4" /> Tolak Undangan
+                                <XCircle className="mr-2 size-4" /> Decline Invitation
                             </Button>
                         </CardFooter>
                     </Card>
@@ -206,23 +237,24 @@ export default function ReviewerShow({ assignment }: Props) {
                                 <CardHeader className="bg-muted/30 pb-4 border-b border-sidebar-border/30">
                                     <CardTitle className="text-xs uppercase tracking-widest flex items-center gap-2">
                                         <FileText className="size-4 text-primary" />
-                                        Informasi Naskah
+                                        Manuscript Information
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="pt-6 space-y-6">
                                     <div className="space-y-3">
-                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">Abstrak</Label>
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">Abstract</Label>
                                         <p className="text-sm leading-relaxed text-foreground italic font-serif">
                                             {manuscript.abstract}
                                         </p>
                                     </div>
                                     <Separator className="opacity-50" />
                                     <div className="space-y-3">
-                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">Kata Kunci</Label>
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">Keywords</Label>
                                         <div className="flex flex-wrap gap-2">
-                                            {manuscript.keywords.split(',').map((k, i) => (
+                                            {manuscript.keywords?.split(',').map((k, i) => (
                                                 <Badge key={i} variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-medium opacity-80">{k.trim()}</Badge>
                                             ))}
+                                            {!manuscript.keywords && <span className="text-xs text-muted-foreground italic">No keywords available</span>}
                                         </div>
                                     </div>
                                 </CardContent>
@@ -237,25 +269,25 @@ export default function ReviewerShow({ assignment }: Props) {
                                     <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
                                         <CardTitle className="text-sm uppercase tracking-widest flex items-center gap-2 text-primary">
                                             <Star className="size-4" />
-                                            Formulir Penilaian Naskah
+                                            Manuscript Evaluation Form
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="pt-8 space-y-8">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                            <ScoreSelector label="Relevansi Subjek" field="relevance_score" value={reviewForm.data.relevance_score} />
-                                            <ScoreSelector label="Kebaruan (Novelty)" field="novelty_score" value={reviewForm.data.novelty_score} />
-                                            <ScoreSelector label="Metodologi & Analisis" field="methodology_score" value={reviewForm.data.methodology_score} />
+                                            <ScoreSelector label="Subject Relevance" field="relevance_score" value={reviewForm.data.relevance_score} />
+                                            <ScoreSelector label="Novelty" field="novelty_score" value={reviewForm.data.novelty_score} />
+                                            <ScoreSelector label="Methodology & Analysis" field="methodology_score" value={reviewForm.data.methodology_score} />
                                         </div>
 
                                         <Separator className="opacity-50" />
 
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label className="font-bold">Komentar Khusus untuk Penulis</Label>
-                                                <CardDescription>Berikan kritik konstruktif untuk membantu penulis memperbaiki naskahnya.</CardDescription>
+                                                <Label className="font-bold">Comments for Authors</Label>
+                                                <CardDescription>Provide constructive feedback to help authors improve their manuscript.</CardDescription>
                                                 <Textarea
                                                     className="min-h-[150px] font-serif"
-                                                    placeholder="Ketik komentar anda di sini..."
+                                                    placeholder="Type your comments here..."
                                                     value={reviewForm.data.comment_for_author}
                                                     onChange={e => reviewForm.setData('comment_for_author', e.target.value)}
                                                     required
@@ -264,13 +296,13 @@ export default function ReviewerShow({ assignment }: Props) {
 
                                             <div className="space-y-2">
                                                 <Label className="font-bold flex items-center gap-2">
-                                                    Komentar untuk Editor
-                                                    <Badge variant="outline" className="text-[9px] uppercase tracking-tighter opacity-70">Privat</Badge>
+                                                    Comments for Editors
+                                                    <Badge variant="outline" className="text-[9px] uppercase tracking-tighter opacity-70">Private</Badge>
                                                 </Label>
-                                                <CardDescription>Masukan rahasia yang hanya bisa dilihat oleh tim redaksi.</CardDescription>
+                                                <CardDescription>Secret feedback visible only to the editorial team.</CardDescription>
                                                 <Textarea
                                                     className="min-h-[100px] bg-muted/20"
-                                                    placeholder="Ketik catatan rahasia untuk editor (opsional)..."
+                                                    placeholder="Type secret notes for editors (optional)..."
                                                     value={reviewForm.data.comment_for_editor}
                                                     onChange={e => reviewForm.setData('comment_for_editor', e.target.value)}
                                                 />
@@ -280,22 +312,22 @@ export default function ReviewerShow({ assignment }: Props) {
                                     {assignment.status !== 'completed' && (
                                         <CardFooter className="bg-muted/30 border-t border-sidebar-border/30 flex items-center justify-between p-6">
                                             <div className="space-y-1">
-                                                <Label className="text-sm font-bold">Rekomendasi Anda</Label>
+                                                <Label className="text-sm font-bold">Your Recommendation</Label>
                                                 <select
                                                     className="h-10 px-4 rounded-full border-2 border-primary/20 bg-background text-sm font-bold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={reviewForm.data.recommendation}
                                                     onChange={e => reviewForm.setData('recommendation', e.target.value)}
                                                     required
                                                 >
-                                                    <option value="">-- Pilih Keputusan --</option>
-                                                    <option value="accept">Terima (Accept)</option>
-                                                    <option value="minor_revision">Revisi Minor</option>
-                                                    <option value="major_revision">Revisi Mayor</option>
-                                                    <option value="reject">Tolak (Reject)</option>
+                                                    <option value="">-- Choose Decision --</option>
+                                                    <option value="accept">Accept</option>
+                                                    <option value="minor_revision">Minor Revision</option>
+                                                    <option value="major_revision">Major Revision</option>
+                                                    <option value="reject">Reject</option>
                                                 </select>
                                             </div>
                                             <Button type="submit" className="rounded-full px-10 h-11 font-bold shadow-xl shadow-primary/30" disabled={reviewForm.processing}>
-                                                {reviewForm.processing ? 'Mengirim...' : 'Kirim Tinjauan'}
+                                                {reviewForm.processing ? 'Sending...' : 'Submit Review'}
                                                 <Send className="ml-2 size-4" />
                                             </Button>
                                         </CardFooter>
@@ -310,31 +342,14 @@ export default function ReviewerShow({ assignment }: Props) {
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                         <AlertCircle className="size-3.5" />
-                                        Instruksi Peninjau
+                                        Reviewer Instructions
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="text-[12px] leading-relaxed space-y-3">
-                                    <p>1. Tinjauan harus bersifat objektif, konstruktif, dan profesional.</p>
-                                    <p>2. Identitas anda dirahasiakan sepenuhnya dari penulis (*blind review*).</p>
-                                    <p>3. Harap perhatikan integritas data dan potensi plagiasi.</p>
-                                    <p>4. Selesaikan penilaian sebelum batas waktu yang telah ditentukan.</p>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="border-sidebar-border/50 shadow-sm">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                        <Download className="size-3.5" />
-                                        Dokumen Pendukung
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-2">
-                                    <Button variant="ghost" size="sm" className="w-full justify-start text-[11px] h-8 hover:bg-primary/5 hover:text-primary">
-                                        <FileText className="mr-2 size-3" /> Panduan Peninjau (PDF)
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="w-full justify-start text-[11px] h-8 hover:bg-primary/5 hover:text-primary">
-                                        <MessageSquare className="mr-2 size-3" /> Form Konflik Kepentingan
-                                    </Button>
+                                    <p>1. Reviews should be objective, constructive, and professional.</p>
+                                    <p>2. Your identity is kept confidential from the authors (blind review).</p>
+                                    <p>3. Please pay attention to data integrity and potential plagiarism.</p>
+                                    <p>4. Complete the evaluation before the specified deadline.</p>
                                 </CardContent>
                             </Card>
                         </div>

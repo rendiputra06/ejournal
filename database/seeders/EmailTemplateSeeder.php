@@ -70,6 +70,27 @@ class EmailTemplateSeeder extends Seeder
                 'content' => 'Hello Editor,\n\nA review has been submitted for the manuscript "{{manuscript_title}}" by {{reviewer_name}}.\n\nPlease log in to view the review report:\n<a href="{{action_url}}">View Review</a>',
                 'variables' => ['manuscript_title', 'reviewer_name', 'action_url'],
             ],
+            [
+                'slug' => 'journal_screening_proceed',
+                'name' => 'Screening Decision: Proceed to Review',
+                'subject' => 'Update on your manuscript: "{{manuscript_title}}"',
+                'content' => 'Dear {{author_name}},\n\nWe are pleased to inform you that your manuscript, "{{manuscript_title}}", has passed the initial screening and is now proceeding to peer review.\n\nYou can track the progress here:\n<a href="{{action_url}}">View Submission</a>\n\nBest regards,\nJournal Editorial Team',
+                'variables' => ['author_name', 'manuscript_title', 'action_url'],
+            ],
+            [
+                'slug' => 'journal_decision_accept',
+                'name' => 'Final Decision: Accepted',
+                'subject' => 'Acceptance Notification: {{manuscript_title}}',
+                'content' => 'Dear {{author_name}},\n\nCongratulations! We are delighted to inform you that your manuscript, "{{manuscript_title}}", has been accepted for publication in our journal.\n\nOur production team will contact you soon regarding the next steps.\n\nBest regards,\nJournal Editorial Team',
+                'variables' => ['author_name', 'manuscript_title'],
+            ],
+            [
+                'slug' => 'journal_published',
+                'name' => 'Manuscript Published',
+                'subject' => 'Your manuscript has been published: {{manuscript_title}}',
+                'content' => 'Dear {{author_name}},\n\nWe are pleased to announce that your manuscript, "{{manuscript_title}}", has been officially published.\n\nYou can view and share your article here:\n<a href="{{action_url}}">View Article</a>\n\nThank you for choosing to publish with us.\n\nBest regards,\nJournal Editorial Team',
+                'variables' => ['author_name', 'manuscript_title', 'action_url'],
+            ],
         ];
 
         foreach ($templates as $template) {

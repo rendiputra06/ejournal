@@ -9,14 +9,28 @@ use Inertia\Inertia;
 
 class AnnouncementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $announcements = Announcement::with('user')
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        $query = Announcement::with('user')
+            ->orderByDesc('created_at');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('content', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->date) {
+            $query->whereDate('published_at', $request->date);
+        }
+
+        $announcements = $query->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('announcements/Index', [
             'announcements' => $announcements,
+            'filters' => $request->only(['search', 'date']),
         ]);
     }
 

@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, FileText, CheckCircle2, Inbox, Calendar, User, ArrowUpRight, Sparkles } from 'lucide-react';
+import { PlusCircle, FileText, CheckCircle2, Inbox, Calendar, User, ArrowUpRight, Sparkles, Search, Filter } from 'lucide-react';
 import dayjs from 'dayjs';
 import { type BreadcrumbItem } from '@/types';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
 import Pagination from '@/components/pagination';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Author {
     id: number;
@@ -36,6 +38,10 @@ interface Props {
         active_count: number;
         finished_count: number;
     };
+    filters?: {
+        search?: string;
+        status?: string;
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,26 +49,46 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'My Manuscripts', href: '/author/submissions' },
 ];
 
-export default function AuthorIndex({ manuscripts }: Props) {
+export default function AuthorIndex({ manuscripts, filters = {} }: Props) {
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
+
+    const handleSearch = () => {
+        router.get('/author/submissions', {
+            search: searchQuery,
+            status: statusFilter !== 'all' ? statusFilter : undefined
+        }, { preserveState: true, preserveScroll: true });
+    };
+
+    const handleStatusChange = (value: string) => {
+        setStatusFilter(value);
+        router.get('/author/submissions', {
+            search: searchQuery,
+            status: value !== 'all' ? value : undefined
+        }, { preserveState: true, preserveScroll: true });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manuscript Submission" />
 
             <div className="flex-1 p-4 md:p-6 lg:p-8">
-                <div className="max-w-7xl mx-auto">
-                    <PageHeader
-                        title="My Manuscripts"
-                        description="Monitor the progress of your scientific contributions and manage your submissions."
-                    >
+                <div className="max-w-7xl mx-auto space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <PageHeader
+                            title="My Manuscripts"
+                            description="Monitor the progress of your scientific contributions and manage your submissions."
+                            className="mb-0"
+                        />
                         <Button asChild className="gap-2 shadow-lg shadow-primary/10 rounded-full group">
                             <Link href="/author/submissions/create">
                                 <PlusCircle className="size-4 group-hover:rotate-90 transition-transform" />
                                 <span>Submit New Manuscript</span>
                             </Link>
                         </Button>
-                    </PageHeader>
+                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <Card className="border-none shadow-sm ring-1 ring-blue-200 dark:ring-blue-900/30 bg-blue-50/20 dark:bg-blue-950/5 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <FileText className="size-24 -mr-8 -mt-8" />
@@ -115,6 +141,42 @@ export default function AuthorIndex({ manuscripts }: Props) {
                         </Card>
                     </div>
 
+                    <Card className="border-none shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 bg-background/50 backdrop-blur-sm">
+                        <CardContent className="p-4">
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search by title or ID..."
+                                        className="pl-9 bg-white dark:bg-neutral-900"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                    />
+                                </div>
+                                <div className="w-full md:w-[200px]">
+                                    <Select value={statusFilter} onValueChange={handleStatusChange}>
+                                        <SelectTrigger className="bg-white dark:bg-neutral-900">
+                                            <SelectValue placeholder="Filter by Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Statuses</SelectItem>
+                                            <SelectItem value="draft">Draft</SelectItem>
+                                            <SelectItem value="submitted">Submitted</SelectItem>
+                                            <SelectItem value="review">In Review</SelectItem>
+                                            <SelectItem value="accepted">Accepted</SelectItem>
+                                            <SelectItem value="published">Published</SelectItem>
+                                            <SelectItem value="rejected">Rejected</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Button onClick={handleSearch} variant="secondary">
+                                    Filter
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <Card className="border-none shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 overflow-hidden bg-background/50 backdrop-blur-sm">
                         <CardContent className="p-0">
                             <Table>
@@ -133,7 +195,7 @@ export default function AuthorIndex({ manuscripts }: Props) {
                                             <TableCell colSpan={5} className="h-72 text-center text-muted-foreground italic">
                                                 <div className="flex flex-col items-center gap-3">
                                                     <Inbox className="size-12 opacity-10 mb-2" />
-                                                    <p className="text-xl font-light">You haven't submitted any manuscripts yet.</p>
+                                                    <p className="text-xl font-light">No manuscripts found.</p>
                                                     <Button asChild variant="outline" size="sm" className="rounded-full">
                                                         <Link href="/author/submissions/create">Submit Your First Manuscript</Link>
                                                     </Button>

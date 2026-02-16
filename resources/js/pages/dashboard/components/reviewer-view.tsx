@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { ClipboardCheck, Calendar, History, AlertCircle, CheckCircle2, Timer, Star, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -36,7 +36,6 @@ interface ReviewerData {
 }
 
 export const ReviewerView = ({ data }: { data: ReviewerData }) => {
-    const { post, processing } = useForm();
 
     const stats = [
         { label: 'Pending Reviews', value: data.stats.pendingReviews.toString(), icon: ClipboardCheck, trend: 'Action', color: 'blue' as const, desc: 'Awaiting your review' },
@@ -46,11 +45,15 @@ export const ReviewerView = ({ data }: { data: ReviewerData }) => {
     ];
 
     const handleAccept = (assignmentId: number) => {
-        post(route('reviewer.assignments.accept', assignmentId));
+        router.post(route('reviewer.assignments.respond', assignmentId), {
+            status: 'accepted'
+        });
     };
 
     const handleDecline = (assignmentId: number) => {
-        post(route('reviewer.assignments.decline', assignmentId));
+        router.post(route('reviewer.assignments.respond', assignmentId), {
+            status: 'declined'
+        });
     };
 
     return (

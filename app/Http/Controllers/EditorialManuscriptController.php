@@ -8,6 +8,7 @@ use App\Models\Manuscript;
 use App\Models\User;
 use App\Models\Issue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\JournalNotification;
 
@@ -16,14 +17,25 @@ class EditorialManuscriptController extends Controller
     /**
      * Display a listing of all manuscripts for editorial review.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $manuscripts = Manuscript::with(['user', 'authors'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = Manuscript::with(['user', 'authors']);
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $manuscripts = $query->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('editorial/submissions/index', [
-            'manuscripts' => $manuscripts
+            'manuscripts' => $manuscripts,
+            'filters' => $request->only(['search', 'status'])
         ]);
     }
 
@@ -47,7 +59,8 @@ class EditorialManuscriptController extends Controller
             'manuscript' => $manuscript,
             'editors' => $editors,
             'reviewers' => $reviewers,
-            'issues' => $issues
+            'issues' => $issues,
+            'auth_user_role' => Auth::user()->roles->first()?->name ?? 'reader'
         ]);
     }
 
@@ -61,18 +74,34 @@ class EditorialManuscriptController extends Controller
             'notes' => 'required_if:decision,reject,revision|string|nullable'
         ]);
 
+        $manuscript->load('assignments');
+        $hasReviewers = $manuscript->assignments()->where('role', 'reviewer')->exists();
+
         $statusMap = [
-            'proceed' => 'screening', // Moves to screening stage/Editor assignment
+            'proceed' => ($hasReviewers || $manuscript->status === 'reviewing') ? 'final_decision' : 'screening',
             'reject' => 'archived',
             'revision' => 'draft', // Send back to author
         ];
 
+        $previousStatus = $manuscript->status;
+        $newStatus = $statusMap[$request->decision];
+
         $manuscript->update([
-            'status' => $statusMap[$request->decision]
+            'status' => $newStatus
         ]);
 
         // Send Notification to Author based on decision
-        if ($request->decision === 'reject') {
+        if ($request->decision === 'proceed') {
+            $template = ($newStatus === 'final_decision') ? 'journal_decision_accept' : 'journal_screening_proceed';
+            $manuscript->user->notify(new JournalNotification(
+                $template,
+                [
+                    'author_name' => $manuscript->user->name,
+                    'manuscript_title' => $manuscript->title,
+                    'action_url' => route('author.submissions.show', $manuscript->id),
+                ]
+            ));
+        } elseif ($request->decision === 'reject') {
             $manuscript->user->notify(new JournalNotification(
                 'journal_decision_screening_reject',
                 [
@@ -91,7 +120,7 @@ class EditorialManuscriptController extends Controller
             ));
         }
 
-        return redirect()->back()->with('success', 'Keputusan prasaring telah berhasil disimpan.');
+        return redirect()->back()->with('success', 'Keputusan operasional telah berhasil disimpan.');
     }
 
     /**
@@ -120,6 +149,16 @@ class EditorialManuscriptController extends Controller
             'user_id' => 'required|exists:users,id',
             'due_date' => 'required|date|after:today'
         ]);
+
+        // Check for duplicate invitation
+        $exists = $manuscript->assignments()
+            ->where('user_id', $request->user_id)
+            ->where('role', 'reviewer')
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()->with('error', 'Reviewer ini sudah diundang sebelumnya.');
+        }
 
         $manuscript->assignments()->create([
             'user_id' => $request->user_id,

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { type BreadcrumbItem } from '@/types';
@@ -17,8 +17,9 @@ import {
 import { PageHeader } from '@/components/page-header';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import Pagination from '@/components/pagination';
-import { Megaphone, Edit2, Trash2, Calendar, User } from 'lucide-react';
+import { Megaphone, Edit2, Trash2, Calendar, User, Search } from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -47,31 +48,92 @@ interface Props {
         last_page: number;
         links: { url: string | null; label: string; active: boolean }[];
     };
+    filters?: {
+        search?: string;
+        date?: string;
+    };
 }
 
-export default function AnnouncementIndex({ announcements }: Props) {
+export default function AnnouncementIndex({ announcements, filters = {} }: Props) {
     const { delete: destroy, processing } = useForm();
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [dateFilter, setDateFilter] = useState(filters.date || '');
 
     const handleDelete = (id: number) => {
         destroy(`/editorial/announcements/${id}`, { preserveScroll: true });
+    };
+
+    const handleSearch = () => {
+        router.get('/editorial/announcements', {
+            search: searchQuery,
+            date: dateFilter
+        }, { preserveState: true, preserveScroll: true });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Announcement Management" />
             <div className="flex-1 p-4 md:p-6 lg:p-8">
-                <div className="max-w-7xl mx-auto">
-                    <PageHeader
-                        title="Journal Announcements"
-                        description="Broadcast important news, calls for papers, and system updates to the public journal site."
-                    >
+                <div className="max-w-7xl mx-auto space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <PageHeader
+                            title="Journal Announcements"
+                            description="Broadcast important news, calls for papers, and system updates."
+                            className="mb-0"
+                        />
                         <Button asChild className="gap-2 shadow-lg shadow-primary/10 rounded-full">
                             <Link href="/editorial/announcements/create">
                                 <Megaphone className="size-4" />
                                 <span>Create Announcement</span>
                             </Link>
                         </Button>
-                    </PageHeader>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-4 items-center">
+                        <div className="relative flex-1 w-full md:max-w-sm">
+                            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search announcements..."
+                                className="pl-9 bg-white dark:bg-neutral-900"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            />
+                        </div>
+                        <div className="w-full md:w-auto">
+                            <Input
+                                type="date"
+                                className="bg-white dark:bg-neutral-900 w-full md:w-48"
+                                value={dateFilter}
+                                onChange={(e) => {
+                                    setDateFilter(e.target.value);
+                                    // Trigger search immediately on date change? Usually yes or enter.
+                                    // Let's keep it manual or on enter for consistency, or maybe explicitly trigger it.
+                                    // Given it's a filter, immediate update is nicer but Input doesn't have debounce built-in easily here.
+                                    // I'll add a 'Filter' button or just rely on Enter in search. 
+                                    // Actually, standard pattern in previous tasks was router.get on change or enter.
+                                    // Let's add a "Filter" button or trigger on change. Triggering on change for date is fine.
+                                    router.get('/editorial/announcements', {
+                                        search: searchQuery,
+                                        date: e.target.value
+                                    }, { preserveState: true, preserveScroll: true });
+                                }}
+                            />
+                        </div>
+                        {(searchQuery || dateFilter) && (
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    setDateFilter('');
+                                    router.get('/editorial/announcements');
+                                }}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                Clear filters
+                            </Button>
+                        )}
+                    </div>
 
                     <Card className="border-none shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 overflow-hidden">
                         <CardContent className="p-0">
@@ -91,6 +153,18 @@ export default function AnnouncementIndex({ announcements }: Props) {
                                                 <div className="flex flex-col items-center justify-center gap-2">
                                                     <Megaphone className="size-10 opacity-10 mb-2" />
                                                     <p className="text-lg font-light italic">No announcements found.</p>
+                                                    {(searchQuery || dateFilter) && (
+                                                        <Button
+                                                            variant="link"
+                                                            onClick={() => {
+                                                                setSearchQuery('');
+                                                                setDateFilter('');
+                                                                router.get('/editorial/announcements');
+                                                            }}
+                                                        >
+                                                            Clear filters
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

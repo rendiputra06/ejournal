@@ -238,7 +238,7 @@ class DashboardController extends Controller
                         'id' => $a->id,
                         'manuscript_id' => $a->manuscript_id,
                         'title' => $a->manuscript->title,
-                        'due_date' => $a->due_date ? $a->due_date->format('M d, Y') : 'No Date',
+                        'due_date' => $a->due_date ? (is_string($a->due_date) ? $a->due_date : $a->due_date->format('M d, Y')) : 'No Date',
                         'status' => $a->status,
                     ];
                 })->values(),

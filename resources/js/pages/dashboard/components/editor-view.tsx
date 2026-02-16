@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Link } from '@inertiajs/react';
 import { FileText, Zap, FileSearch, Gavel, Users, Clock } from 'lucide-react';
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { StatCard } from './stat-card';
@@ -65,7 +66,9 @@ export const EditorView = ({ data }: { data: EditorData }) => {
                                             <span className="flex items-center gap-1"><Clock className="size-3" /> {item.received}</span>
                                         </div>
                                     </div>
-                                    <Button size="sm">Assign</Button>
+                                    <Button size="sm" asChild>
+                                        <Link href={`/editorial/submissions/${item.id}`}>Assign</Link>
+                                    </Button>
                                 </div>
                             ))
                         )}

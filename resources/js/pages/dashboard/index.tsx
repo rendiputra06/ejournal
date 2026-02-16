@@ -137,7 +137,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Dashboard({ roles, data }: DashboardProps) {
-    const primaryRole = roles[0] || 'reader';
+    const primaryRole = roles.includes('journal-manager') ? 'journal-manager' : (roles[0] || 'reader');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

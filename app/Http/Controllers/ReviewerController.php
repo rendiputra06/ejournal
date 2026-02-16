@@ -15,16 +15,27 @@ class ReviewerController extends Controller
     /**
      * Display a listing of review assignments for the current reviewer.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $assignments = ManuscriptAssignment::with(['manuscript.authors'])
+        $query = ManuscriptAssignment::with(['manuscript.authors'])
             ->where('user_id', Auth::id())
-            ->where('role', 'reviewer')
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->where('role', 'reviewer');
+
+        if ($request->filled('search')) {
+            $query->whereHas('manuscript', function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $assignments = $query->orderBy('created_at', 'desc')->get();
 
         return Inertia::render('reviewer/assignments/index', [
-            'assignments' => $assignments
+            'assignments' => $assignments,
+            'filters' => $request->only(['search', 'status'])
         ]);
     }
 

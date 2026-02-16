@@ -7,27 +7,30 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-    BookOpen,
     Plus,
     Calendar,
     Layers,
     ChevronDown,
     ChevronUp,
-    CheckCircle2,
     FileText,
-    ExternalLink,
-    AlertCircle,
-    Info,
     ArrowUpRight,
-    Library
+    Library,
+    Edit2,
+    Image as ImageIcon
 } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/page-header';
 import { cn } from '@/lib/utils';
-import dayjs from 'dayjs';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from '@/components/ui/dialog';
 
 interface Manuscript {
     id: number;
@@ -44,6 +47,7 @@ interface Issue {
     month: string | null;
     status: string;
     manuscripts: Manuscript[];
+    cover_image_url?: string;
 }
 
 interface Volume {
@@ -66,6 +70,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function IssueIndex({ volumes }: Props) {
     const [expandedVolumes, setExpandedVolumes] = useState<Record<number, boolean>>({});
+    const [editingVolume, setEditingVolume] = useState<Volume | null>(null);
+    const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
 
     const volumeForm = useForm({
         number: '',
@@ -78,7 +84,25 @@ export default function IssueIndex({ volumes }: Props) {
         number: '',
         year: new Date().getFullYear(),
         month: '',
-        title: ''
+        title: '',
+        cover_image: null as File | null,
+    });
+
+    // Edit Forms
+    const editVolumeForm = useForm({
+        number: '',
+        year: 0,
+        description: '' as string | null
+    });
+
+    const editIssueForm = useForm({
+        number: '',
+        year: 0,
+        month: '' as string | null,
+        title: '' as string | null,
+        status: '',
+        cover_image: null as File | null,
+        _method: 'PUT'
     });
 
     const toggleVolume = (id: number) => {
@@ -87,7 +111,7 @@ export default function IssueIndex({ volumes }: Props) {
 
     const handleCreateVolume = (e: React.FormEvent) => {
         e.preventDefault();
-        volumeForm.post(route('editorial.volumes.store'), {
+        volumeForm.post('/editorial/volumes', {
             onSuccess: () => {
                 toast.success('Volume created successfully.');
                 volumeForm.reset();
@@ -97,7 +121,7 @@ export default function IssueIndex({ volumes }: Props) {
 
     const handleCreateIssue = (e: React.FormEvent) => {
         e.preventDefault();
-        issueForm.post(route('editorial.issues.store'), {
+        issueForm.post('/editorial/issues', {
             onSuccess: () => {
                 toast.success('Issue created successfully.');
                 issueForm.reset();
@@ -105,13 +129,54 @@ export default function IssueIndex({ volumes }: Props) {
         });
     };
 
-    // Helper to find route (assuming Ziggy is available via global route() or you can use string paths)
-    // For now, I'll use string paths to be safe if route() isn't globally typed well.
-    const route = (name: string, params?: any) => {
-        if (name === 'editorial.volumes.store') return '/editorial/volumes';
-        if (name === 'editorial.issues.store') return '/editorial/issues';
-        if (name === 'editorial.submissions.show') return `/editorial/submissions/${params}`;
-        return '#';
+    // Edit Handlers
+    const startEditVolume = (volume: Volume, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingVolume(volume);
+        editVolumeForm.setData({
+            number: volume.number,
+            year: volume.year,
+            description: volume.description
+        });
+    };
+
+    const updateVolume = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingVolume) return;
+        editVolumeForm.put(`/editorial/volumes/${editingVolume.id}`, {
+            onSuccess: () => {
+                toast.success('Volume updated.');
+                setEditingVolume(null);
+            }
+        });
+    };
+
+    const startEditIssue = (issue: Issue) => {
+        setEditingIssue(issue);
+        editIssueForm.setData({
+            number: issue.number,
+            year: issue.year,
+            month: issue.month,
+            title: issue.title,
+            status: issue.status,
+            cover_image: null,
+            _method: 'PUT'
+        });
+    };
+
+    const updateIssue = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingIssue) return;
+        
+        // Use post with _method: 'PUT' for file uploads in Inertia if needed, 
+        // but typically standard router.put works if not strictly multipart/form-data limitation on standard put. 
+        // With file uploads, usually POST with _method=PUT is safer in Laravel.
+        editIssueForm.post(`/editorial/issues/${editingIssue.id}`, {
+            onSuccess: () => {
+                toast.success('Issue updated.');
+                setEditingIssue(null);
+            }
+        });
     };
 
     return (
@@ -157,7 +222,15 @@ export default function IssueIndex({ volumes }: Props) {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <Badge variant="secondary" className="px-3 py-0.5 h-6 rounded-full text-[10px] uppercase font-bold tracking-wider bg-neutral-100 dark:bg-neutral-800 border-none">
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
+                                                    className="size-8 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                                                    onClick={(e) => startEditVolume(volume, e)}
+                                                >
+                                                    <Edit2 className="size-3.5 text-neutral-500" />
+                                                </Button>
+                                                <Badge variant="secondary" className="px-3 py-0.5 h-6 rounded-full text-[10px] uppercase font-bold tracking-wider bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-none">
                                                     {volume.issues.length} Issues
                                                 </Badge>
                                                 <div className="p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
@@ -178,24 +251,40 @@ export default function IssueIndex({ volumes }: Props) {
                                                 <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
                                                     {volume.issues.map(issue => (
                                                         <div key={issue.id} className="p-6 space-y-5 hover:bg-neutral-50/30 dark:hover:bg-neutral-900/10 transition-colors">
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-3">
-                                                                    <Badge className={cn(
-                                                                        "px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ring-1",
-                                                                        issue.status === 'published'
-                                                                            ? "bg-emerald-100 text-emerald-700 ring-emerald-500/10 dark:bg-emerald-900/30 dark:text-emerald-400"
-                                                                            : "bg-amber-100 text-amber-700 ring-amber-500/10 dark:bg-amber-900/30 dark:text-amber-400"
-                                                                    )}>
-                                                                        {issue.status}
-                                                                    </Badge>
-                                                                    <h3 className="font-bold text-neutral-900 dark:text-neutral-100">
-                                                                        Issue No. {issue.number}
-                                                                        {issue.title && <span className="text-neutral-400 dark:text-neutral-500 font-normal ml-2">— {issue.title}</span>}
-                                                                    </h3>
+                                                            <div className="flex items-start justify-between">
+                                                                <div className="flex gap-4">
+                                                                    {issue.cover_image_url && (
+                                                                        <img src={issue.cover_image_url} alt="Cover" className="w-16 h-20 object-cover rounded-md shadow-sm border border-neutral-200 dark:border-neutral-800" />
+                                                                    )}
+                                                                    <div className="space-y-1">
+                                                                         <div className="flex items-center gap-3">
+                                                                            <Badge className={cn(
+                                                                                "px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ring-1",
+                                                                                issue.status === 'published'
+                                                                                    ? "bg-emerald-100 text-emerald-700 ring-emerald-500/10 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                                                                    : "bg-amber-100 text-amber-700 ring-amber-500/10 dark:bg-amber-900/30 dark:text-amber-400"
+                                                                            )}>
+                                                                                {issue.status}
+                                                                            </Badge>
+                                                                            <h3 className="font-bold text-neutral-900 dark:text-neutral-100">
+                                                                                Issue No. {issue.number}
+                                                                                {issue.title && <span className="text-neutral-400 dark:text-neutral-500 font-normal ml-2">— {issue.title}</span>}
+                                                                            </h3>
+                                                                        </div>
+                                                                        <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block">
+                                                                            {issue.month} {issue.year}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
-                                                                    {issue.month} {issue.year}
-                                                                </span>
+                                                                
+                                                                <Button 
+                                                                    size="icon" 
+                                                                    variant="ghost" 
+                                                                    className="size-8 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                                                                    onClick={() => startEditIssue(issue)}
+                                                                >
+                                                                    <Edit2 className="size-3.5 text-neutral-500" />
+                                                                </Button>
                                                             </div>
 
                                                             <div className="space-y-3">
@@ -209,7 +298,7 @@ export default function IssueIndex({ volumes }: Props) {
                                                                         {issue.manuscripts.map(ms => (
                                                                             <Link
                                                                                 key={ms.id}
-                                                                                href={route('editorial.submissions.show', ms.id)}
+                                                                                href={`/editorial/submissions/${ms.id}`}
                                                                                 className="flex items-center justify-between text-xs p-3 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/30 border border-neutral-100 dark:border-neutral-800 hover:border-primary/30 hover:bg-white dark:hover:bg-neutral-900 transition-all group/item shadow-sm hover:shadow-md"
                                                                             >
                                                                                 <div className="flex items-center gap-3 overflow-hidden">
@@ -353,6 +442,17 @@ export default function IssueIndex({ volumes }: Props) {
                                             onChange={e => issueForm.setData('title', e.target.value)}
                                         />
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[11px] font-bold uppercase text-neutral-500 tracking-tight">Cover Image (Optional)</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                className="bg-neutral-50 dark:bg-neutral-900 border-none ring-1 ring-neutral-200 dark:ring-neutral-800 focus-visible:ring-indigo-500 file:bg-indigo-50 file:text-indigo-600 file:border-0 file:rounded-md file:px-2 file:py-1 file:text-xs file:font-semibold"
+                                                onChange={e => issueForm.setData('cover_image', e.target.files ? e.target.files[0] : null)}
+                                            />
+                                        </div>
+                                    </div>
                                     <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20 active:scale-95 transition-all" disabled={issueForm.processing}>
                                         Schedule Issue
                                     </Button>
@@ -361,6 +461,91 @@ export default function IssueIndex({ volumes }: Props) {
                         </Card>
                     </div>
                 </div>
+
+                {/* Edit Volume Dialog */}
+                <Dialog open={!!editingVolume} onOpenChange={(open) => !open && setEditingVolume(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Volume</DialogTitle>
+                            <DialogDescription>Update volume details.</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={updateVolume} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Volume No.</Label>
+                                    <Input value={editVolumeForm.data.number} onChange={e => editVolumeForm.setData('number', e.target.value)} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Year</Label>
+                                    <Input type="number" value={editVolumeForm.data.year} onChange={e => editVolumeForm.setData('year', parseInt(e.target.value))} required />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Description</Label>
+                                <Textarea value={editVolumeForm.data.description || ''} onChange={e => editVolumeForm.setData('description', e.target.value)} />
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setEditingVolume(null)}>Cancel</Button>
+                                <Button type="submit" disabled={editVolumeForm.processing}>Save Changes</Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Edit Issue Dialog */}
+                <Dialog open={!!editingIssue} onOpenChange={(open) => !open && setEditingIssue(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Issue</DialogTitle>
+                            <DialogDescription>Update issue details and cover image.</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={updateIssue} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Issue No.</Label>
+                                    <Input value={editIssueForm.data.number} onChange={e => editIssueForm.setData('number', e.target.value)} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Year</Label>
+                                    <Input type="number" value={editIssueForm.data.year} onChange={e => editIssueForm.setData('year', parseInt(e.target.value))} required />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Month</Label>
+                                <Input value={editIssueForm.data.month || ''} onChange={e => editIssueForm.setData('month', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Title</Label>
+                                <Input value={editIssueForm.data.title || ''} onChange={e => editIssueForm.setData('title', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Status</Label>
+                                <select
+                                    className="w-full h-10 px-3 rounded-md bg-neutral-50 dark:bg-neutral-900 border-none ring-1 ring-neutral-200 dark:ring-neutral-800 focus-visible:ring-primary text-sm appearance-none cursor-pointer"
+                                    value={editIssueForm.data.status}
+                                    onChange={e => editIssueForm.setData('status', e.target.value)}
+                                    required
+                                >
+                                    <option value="draft">Draft</option>
+                                    <option value="published">Published</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Cover Image</Label>
+                                <Input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={e => editIssueForm.setData('cover_image', e.target.files ? e.target.files[0] : null)} 
+                                />
+                                <p className="text-xs text-muted-foreground">Upload to replace existing cover.</p>
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setEditingIssue(null)}>Cancel</Button>
+                                <Button type="submit" disabled={editIssueForm.processing}>Save Changes</Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );
