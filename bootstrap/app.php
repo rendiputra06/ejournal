@@ -29,5 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, \Illuminate\Http\Request $request) {
+            if ($request->routeIs('verification.verify')) {
+                return redirect()->route('verification.notice')
+                    ->with('error', 'Link verifikasi telah kedaluwarsa atau tidak valid. Silakan kirim ulang email verifikasi.');
+            }
+        });
     })->create();
