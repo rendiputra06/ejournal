@@ -42,14 +42,37 @@ class TestMailConfig extends Command
             if ($setting->mail_from_name) {
                 \Illuminate\Support\Facades\Config::set('mail.from.name', $setting->mail_from_name);
             }
+
+            // Force default mailer to smtp to ensure DB settings are used
+            \Illuminate\Support\Facades\Config::set('mail.default', 'smtp');
         } else {
             $this->info("Using SMTP settings from .env file...");
-            // No need to set config, it's already loaded from .env
         }
+
+        // Display current configuration
+        $this->comment("--- Configuration Summary ---");
+        $this->line("Default Mailer: " . config('mail.default'));
+        $this->line("Transport:      " . config('mail.mailers.smtp.transport'));
+        $this->line("SMTP Host:     " . config('mail.mailers.smtp.host'));
+        $this->line("SMTP Port:     " . config('mail.mailers.smtp.port'));
+        $this->line("Encryption:    " . config('mail.mailers.smtp.encryption'));
+        $this->line("Username:      " . config('mail.mailers.smtp.username'));
+        
+        // Safety check for password
+        $pass = config('mail.mailers.smtp.password');
+        $this->line("Password Set:  " . ($pass ? 'YES (Length: '.strlen($pass).')' : 'NO (EMPTY)'));
+        
+        $this->line("From Address:  " . config('mail.from.address'));
+        $this->line("From Name:     " . config('mail.from.name'));
+        $this->comment("-----------------------------");
+
+        // FORCE PURGE: This is critical. It forces Laravel to recreate the transport with new config.
+        \Illuminate\Support\Facades\Mail::purge('smtp');
 
         $this->info("Sending test email to: {$recipient}...");
 
         try {
+            // Using implicit default mailer (which we might have forced to 'smtp')
             \Illuminate\Support\Facades\Mail::raw('SMTP test from Journal System CLI.', function ($message) use ($recipient) {
                 $message->to($recipient)->subject('System SMTP CLI Test');
             });
@@ -57,6 +80,7 @@ class TestMailConfig extends Command
             $this->info('Success! Test email sent successfully.');
         } catch (\Exception $e) {
             $this->error('Failed to send email: ' . $e->getMessage());
+            $this->line('Error Trace: ' . $e->getTraceAsString());
             return 1;
         }
 

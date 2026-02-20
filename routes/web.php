@@ -34,6 +34,7 @@ Route::get('/announcements', [PublicJournalController::class, 'announcements'])-
 Route::get('/about', [PublicJournalController::class, 'about'])->name('journal.about');
 Route::get('/search', [PublicJournalController::class, 'search'])->name('journal.search');
 Route::get('/article/{manuscript}', [PublicJournalController::class, 'article'])->name('journal.article');
+Route::get('/issue/{issue}', [PublicJournalController::class, 'issue'])->name('journal.issue');
 
 Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

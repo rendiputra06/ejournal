@@ -40,8 +40,8 @@ export default function Archives({ archives }: ArchivesProps) {
                                     {archives[year].map((issue) => (
                                         <Link
                                             key={issue.id}
-                                            href={route('journal.current')} // Ideally link to a specific issue detail page
-                                            className="group pointer-events-none" // Disable for now as we only have current issue logic
+                                            href={route('journal.issue', issue.id)}
+                                            className="group"
                                         >
                                             <div className="p-8 border rounded-2xl bg-white shadow-sm hover:shadow-md transition-all group-hover:border-primary/50 flex items-start gap-4">
                                                 <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">

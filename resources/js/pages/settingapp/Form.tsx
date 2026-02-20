@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { type BreadcrumbItem } from '@/types';
-import { Mail, Send, PlusCircle, AlertCircle } from 'lucide-react';
+import { Mail, Send, PlusCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/page-header';
 import { LoadingButton } from '@/components/loading-button';
@@ -72,6 +72,7 @@ export default function SettingForm({ setting }: Props) {
 
   const [testEmail, setTestEmail] = useState('');
   const [testing, setTesting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(setting?.logo ? `/storage/${setting.logo}` : null);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(setting?.favicon ? `/storage/${setting.favicon}` : null);
@@ -215,8 +216,30 @@ export default function SettingForm({ setting }: Props) {
                         <Input id="mail_username" placeholder="notifications@journal.com" value={data.mail_username} onChange={(e) => setData('mail_username', e.target.value)} className="h-11" />
                       </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="mail_password" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">App Password</Label>
-                        <Input id="mail_password" type="password" placeholder="••••••••••••" value={data.mail_password} onChange={(e) => setData('mail_password', e.target.value)} className="h-11" />
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="mail_password" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">App Password</Label>
+                          {setting?.mail_password && (
+                            <span className="text-[9px] bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded-full font-bold">ALREADY SET</span>
+                          )}
+                        </div>
+                        <div className="relative">
+                          <Input
+                            id="mail_password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder={setting?.mail_password ? "••••••••••••" : "Enter SMTP password"}
+                            value={data.mail_password}
+                            onChange={(e) => setData('mail_password', e.target.value)}
+                            className="h-11 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-neutral-400 italic">Leave blank to keep existing password.</p>
                       </div>
                     </div>
 

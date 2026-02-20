@@ -19,8 +19,8 @@ class SettingAppController extends Controller
         $data = $request->validate([
             'nama_app'          => 'required|string|max:255',
             'deskripsi'         => 'nullable|string',
-            'logo'              => 'nullable|file|image|max:2048',
-            'favicon'           => 'nullable|file|image|max:1024',
+            'logo'              => 'nullable|image|max:2048',
+            'favicon'           => 'nullable|image|max:1024',
             'warna'             => 'nullable|string|max:20',
             'seo'               => 'nullable|array',
             'mail_transport'    => 'nullable|string|max:50',
@@ -34,18 +34,28 @@ class SettingAppController extends Controller
             'guidelines'        => 'nullable|string',
         ]);
 
-        $setting = SettingApp::firstOrNew();
+        // Ensure we only ever have ONE row in this table
+        $setting = SettingApp::first();
+        if (!$setting) {
+            $setting = new SettingApp();
+        }
 
+        // Handle File Uploads
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('logo', 'public');
         } else {
-            unset($data['logo']);
+            unset($data['logo']); // Don't overwrite with null if no new file
         }
 
         if ($request->hasFile('favicon')) {
             $data['favicon'] = $request->file('favicon')->store('favicon', 'public');
         } else {
-            unset($data['favicon']);
+            unset($data['favicon']); // Don't overwrite with null if no new file
+        }
+
+        // Safety: If password is not provided in request, don't overwrite existing
+        if (empty($data['mail_password']) && $setting->exists) {
+            unset($data['mail_password']);
         }
 
         $setting->fill($data)->save();

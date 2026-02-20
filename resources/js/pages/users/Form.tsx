@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { PageHeader } from '@/components/page-header';
 import { LoadingButton } from '@/components/loading-button';
 import InputError from '@/components/input-error';
@@ -21,23 +21,22 @@ interface User {
   id?: number;
   name: string;
   email: string;
-  role?: string;
 }
 
 interface Props {
   user?: User;
   roles: Role[];
-  currentRole?: string;
+  selectedRoles?: string[];
 }
 
-export default function UserForm({ user, roles, currentRole }: Props) {
+export default function UserForm({ user, roles, selectedRoles }: Props) {
   const isEdit = !!user;
 
   const { data, setData, post, put, processing, errors } = useForm({
     name: user?.name || '',
     email: user?.email || '',
     password: '',
-    role: currentRole || '',
+    roles: selectedRoles || [] as string[],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -50,6 +49,11 @@ export default function UserForm({ user, roles, currentRole }: Props) {
     { title: 'User Management', href: '/users' },
     { title: isEdit ? 'Edit User' : 'Create User', href: '#' },
   ];
+
+  const roleOptions = roles.map((role) => ({
+    label: role.name,
+    value: role.name,
+  }));
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -120,26 +124,17 @@ export default function UserForm({ user, roles, currentRole }: Props) {
 
                   {/* Role */}
                   <div className="grid gap-2">
-                    <Label htmlFor="role" className="text-sm font-semibold tracking-wide uppercase text-neutral-500">System Role</Label>
-                    <Select
-                      value={data.role}
-                      onValueChange={(value) => setData('role', value)}
-                    >
-                      <SelectTrigger className={cn(
-                        "h-11 transition-all focus:ring-2 focus:ring-primary/20",
-                        errors.role && "border-red-500 focus:ring-red-500/20"
-                      )}>
-                        <SelectValue placeholder="Select a role assignment" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.name}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <InputError message={errors.role} />
+                    <Label htmlFor="roles" className="text-sm font-semibold tracking-wide uppercase text-neutral-500">System Roles</Label>
+                    <MultiSelect
+                      options={roleOptions}
+                      selected={data.roles}
+                      onChange={(selected: string[]) => setData('roles', selected)}
+                      placeholder="Select one or more roles"
+                      className={cn(
+                        errors.roles && "border-red-500 focus:ring-red-500/20"
+                      )}
+                    />
+                    <InputError message={errors.roles} />
                   </div>
                 </div>
 

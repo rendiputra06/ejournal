@@ -23,16 +23,23 @@ class MailTestController extends Controller
         ]);
 
         try {
-            // Temporarily set mail config for this request
-            Config::set('mail.mailers.smtp.transport', $request->mail_transport);
-            Config::set('mail.mailers.smtp.host', $request->mail_host);
-            Config::set('mail.mailers.smtp.port', $request->mail_port);
-            Config::set('mail.mailers.smtp.username', $request->mail_username);
-            Config::set('mail.mailers.smtp.password', $request->mail_password);
-            Config::set('mail.mailers.smtp.encryption', $request->mail_encryption);
-            Config::set('mail.from.address', $request->mail_from_address);
-            Config::set('mail.from.name', $request->mail_from_name);
+            // 1. Force clear any existing mailer instances in memory
+            Mail::purge('smtp');
 
+            // 2. Temporarily set mail config for this request
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.transport' => $request->mail_transport,
+                'mail.mailers.smtp.host' => $request->mail_host,
+                'mail.mailers.smtp.port' => $request->mail_port,
+                'mail.mailers.smtp.username' => $request->mail_username,
+                'mail.mailers.smtp.password' => $request->mail_password,
+                'mail.mailers.smtp.encryption' => $request->mail_encryption,
+                'mail.from.address' => $request->mail_from_address,
+                'mail.from.name' => $request->mail_from_name,
+            ]);
+
+            // 3. Send test email
             Mail::raw('This is a test email to verify SMTP configuration for the Journal System.', function ($message) use ($request) {
                 $message->to($request->email)
                         ->subject('SMTP Connection Test');

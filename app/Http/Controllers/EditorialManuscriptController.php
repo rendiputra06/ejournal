@@ -19,7 +19,14 @@ class EditorialManuscriptController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
         $query = Manuscript::with(['user', 'authors']);
+
+        // Filter for Section Editors: only show assigned manuscripts
+        // Journal Managers can see everything
+        if ($user->hasRole('editor') && !$user->hasRole('journal-manager')) {
+            $query->where('section_editor_id', $user->id);
+        }
 
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -44,7 +51,12 @@ class EditorialManuscriptController extends Controller
      */
     public function show(Manuscript $manuscript)
     {
-        $manuscript->load(['user', 'authors', 'assignments.user', 'assignments.review', 'sectionEditor']);
+        // Auto-update status from 'submitted' to 'screening' when viewed by editor/manager
+        if ($manuscript->status === 'submitted') {
+            $manuscript->update(['status' => 'screening']);
+        }
+
+        $manuscript->load(['user', 'authors', 'assignments.user', 'assignments.review', 'sectionEditor', 'issue.volume']);
         
         // Get potential section editors (users with 'Editor' role)
         $editors = User::role('editor')->get(['id', 'name', 'email']);
@@ -76,6 +88,17 @@ class EditorialManuscriptController extends Controller
 
         $manuscript->load('assignments');
         $hasReviewers = $manuscript->assignments()->where('role', 'reviewer')->exists();
+        $hasPendingReviewers = $manuscript->assignments()
+            ->where('role', 'reviewer')
+            ->whereIn('status', ['pending', 'accepted'])
+            ->exists();
+
+        // Validation: Cannot 'Accept' if there are pending reviewer invitations
+        if ($request->decision === 'proceed' && $hasPendingReviewers) {
+            return redirect()->back()->withErrors([
+                'decision' => 'Cannot accept this manuscript while reviewer invitations are still pending or in progress.'
+            ]);
+        }
 
         $statusMap = [
             'proceed' => ($hasReviewers || $manuscript->status === 'reviewing') ? 'final_decision' : 'screening',
@@ -87,7 +110,8 @@ class EditorialManuscriptController extends Controller
         $newStatus = $statusMap[$request->decision];
 
         $manuscript->update([
-            'status' => $newStatus
+            'status' => $newStatus,
+            'screening_notes' => $request->notes // Persist editorial feedback
         ]);
 
         // Send Notification to Author based on decision
@@ -136,6 +160,18 @@ class EditorialManuscriptController extends Controller
             'section_editor_id' => $request->editor_id,
             'status' => 'reviewing' // Typically moves to reviewing once assigned
         ]);
+
+        // Notify Section Editor
+        $editor = User::find($request->editor_id);
+        $editor->notify(new JournalNotification(
+            'journal_editor_assigned',
+            [
+                'editor_name' => $editor->name,
+                'manuscript_title' => $manuscript->title,
+                'author_name' => $manuscript->user->name,
+                'action_url' => route('editorial.submissions.show', $manuscript->id),
+            ]
+        ));
 
         return redirect()->back()->with('success', 'Section Editor telah ditugaskan.');
     }

@@ -26,7 +26,7 @@ class ManuscriptFileController extends Controller
         
         // Authorization logic
         $isAuthor = $manuscript->user_id === $user->id;
-        $isEditor = $user->hasRole(['editor', 'journal-manager']);
+        $isEditor = $user->hasRole(['editor', 'journal-manager', 'admin']);
         $isReviewer = $manuscript->assignments()
             ->where('user_id', $user->id)
             ->whereIn('status', ['pending', 'accepted', 'completed'])
@@ -56,7 +56,7 @@ class ManuscriptFileController extends Controller
         
         // Same authorization
         $isAuthor = $manuscript->user_id === $user->id;
-        $isEditor = $user->hasRole(['editor', 'journal-manager']);
+        $isEditor = $user->hasRole(['editor', 'journal-manager', 'admin']);
         $isReviewer = $manuscript->assignments()
             ->where('user_id', $user->id)
             ->whereIn('status', ['pending', 'accepted', 'completed'])

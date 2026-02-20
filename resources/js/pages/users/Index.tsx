@@ -151,17 +151,19 @@ export default function UserIndex({ users }: Props) {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button asChild variant="ghost" size="icon" className="size-8 rounded-full hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 px-3 transition-all">
                               <Link href={`/users/${user.id}/edit`}>
                                 <Edit2 className="size-3.5" />
+                                <span className="text-[11px] font-bold uppercase tracking-tight">Edit</span>
                               </Link>
                             </Button>
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20">
+                                <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 px-3 transition-all">
                                   <Key className="size-3.5" />
+                                  <span className="text-[11px] font-bold uppercase tracking-tight">Reset</span>
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className="rounded-2xl border-none shadow-2xl ring-1 ring-neutral-200 dark:ring-neutral-800">
@@ -193,8 +195,9 @@ export default function UserIndex({ users }: Props) {
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="size-8 rounded-full hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20">
+                                <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-lg hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 px-3 transition-all text-red-600/70 hover:text-red-600">
                                   <Trash2 className="size-3.5" />
+                                  <span className="text-[11px] font-bold uppercase tracking-tight">Delete</span>
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className="rounded-2xl border-none shadow-2xl ring-1 ring-neutral-200 dark:ring-neutral-800">

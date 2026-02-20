@@ -141,4 +141,22 @@ class PublicJournalController extends Controller
             'article' => $manuscript,
         ]);
     }
+
+    /**
+     * Issue Detail Page (Table of Contents for specific issue).
+     */
+    public function issue(Issue $issue)
+    {
+        if ($issue->status !== 'published') {
+            abort(404);
+        }
+
+        $issue->load(['manuscripts' => function ($q) {
+            $q->where('status', 'published');
+        }, 'manuscripts.authors']);
+
+        return Inertia::render('journal/issue', [
+            'issue' => $issue,
+        ]);
+    }
 }

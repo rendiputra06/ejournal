@@ -7,6 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
     ChevronLeft,
     FileText,
     Users,
@@ -39,6 +46,7 @@ interface Manuscript {
     keywords: string;
     category: string;
     status: string;
+    screening_notes: string | null;
     created_at: string;
     authors: Author[];
 }
@@ -54,6 +62,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const getStatusConfig = (status: string) => {
     switch (status) {
+        case 'draft':
+            return { label: 'Perlu Revisi', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200', icon: AlertCircle };
         case 'submitted':
             return { label: 'Menunggu Review', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', icon: Clock };
         case 'screening':
@@ -199,11 +209,21 @@ export default function Show({ manuscript }: Props) {
                                     </div>
                                 </div>
                                 <Separator />
-                                <div className="space-y-3">
-                                    <p className="text-xs text-muted-foreground leading-relaxed">
-                                        Naskah Anda sedang berada dalam tahap <strong>{status.label}</strong>. Kami akan memberitahu Anda melalui email ketika ada perubahan status atau diperlukan tindakan lebih lanjut.
-                                    </p>
-                                </div>
+                                {manuscript.status === 'draft' && manuscript.screening_notes && (
+                                    <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 space-y-2 shadow-sm">
+                                        <div className="flex items-center gap-2 text-rose-700">
+                                            <AlertCircle className="size-4" />
+                                            <span className="text-xs font-bold uppercase tracking-wider">Catatan Editor / Keperluan Revisi</span>
+                                        </div>
+                                        <p className="text-sm text-rose-900 leading-relaxed italic border-l-2 border-rose-300 pl-3">
+                                            "{manuscript.screening_notes}"
+                                        </p>
+                                    </div>
+                                )}
+
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Naskah Anda sedang berada dalam tahap <strong>{status.label}</strong>. Kami akan memberitahu Anda melalui email ketika ada perubahan status atau diperlukan tindakan lebih lanjut.
+                                </p>
                             </CardContent>
                         </Card>
 
@@ -212,15 +232,48 @@ export default function Show({ manuscript }: Props) {
                                 <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">File Naskah</CardTitle>
                             </CardHeader>
                             <CardContent className="pt-4 space-y-4">
-                                <Button variant="outline" className="w-full justify-start h-12 gap-3 border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50 text-left px-4 group transition-all">
-                                    <div className="p-1.5 bg-primary/10 rounded group-hover:bg-primary/20 transition-colors">
-                                        <Download className="size-4 text-primary" />
-                                    </div>
-                                    <div className="flex flex-col overflow-hidden">
-                                        <span className="text-sm font-bold truncate">Unduh File Utama</span>
-                                        <span className="text-[10px] text-muted-foreground">Versi Blind Review</span>
-                                    </div>
-                                </Button>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-start h-12 gap-3 border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50 text-left px-3 group transition-all">
+                                                <div className="p-1.5 bg-primary/10 rounded group-hover:bg-primary/20 transition-colors">
+                                                    <ExternalLink className="size-4 text-primary" />
+                                                </div>
+                                                <div className="flex flex-col overflow-hidden">
+                                                    <span className="text-sm font-bold truncate">Pratinjau</span>
+                                                    <span className="text-[9px] text-muted-foreground">Lihat PDF</span>
+                                                </div>
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
+                                            <div className="p-4 border-b bg-muted/30">
+                                                <h3 className="font-bold flex items-center gap-2">
+                                                    <FileText className="size-4 text-primary" />
+                                                    Pratinjau Naskah
+                                                </h3>
+                                            </div>
+                                            <div className="flex-1 bg-muted/20">
+                                                <iframe
+                                                    src={route('manuscripts.file.view', manuscript.id)}
+                                                    className="w-full h-full border-none"
+                                                    title="PDF Preview"
+                                                />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+
+                                    <Button variant="outline" className="w-full justify-start h-12 gap-3 border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50 text-left px-3 group transition-all" asChild>
+                                        <a href={route('manuscripts.file.download', manuscript.id)}>
+                                            <div className="p-1.5 bg-primary/10 rounded group-hover:bg-primary/20 transition-colors">
+                                                <Download className="size-4 text-primary" />
+                                            </div>
+                                            <div className="flex flex-col overflow-hidden">
+                                                <span className="text-sm font-bold truncate">Unduh</span>
+                                                <span className="text-[9px] text-muted-foreground">Simpan File</span>
+                                            </div>
+                                        </a>
+                                    </Button>
+                                </div>
 
                                 <p className="text-[10px] text-center text-muted-foreground italic">
                                     Hanya penulis yang sah yang memiliki akses ke file ini.

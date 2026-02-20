@@ -23,6 +23,7 @@ class Manuscript extends Model implements HasMedia
         'keywords',
         'category',
         'status',
+        'screening_notes',
         'page_start',
         'page_end',
         'doi',

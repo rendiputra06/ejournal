@@ -164,10 +164,25 @@ export default function EditorialShow({ manuscript, editors, reviewers, issues, 
         doi: manuscript.doi || ''
     });
 
+    const [showConfirmDecision, setShowConfirmDecision] = useState(false);
+    const [isDecisionOpen, setIsDecisionOpen] = useState(false);
+
+    const hasPendingReviewers = manuscript.assignments.some(
+        a => a.role === 'reviewer' && (a.status === 'pending' || a.status === 'accepted')
+    );
+
     const handleScreening = (e: React.FormEvent) => {
         e.preventDefault();
+        setShowConfirmDecision(true);
+    };
+
+    const confirmScreening = () => {
+        setShowConfirmDecision(false);
         screeningForm.post(route('editorial.submissions.screening', manuscript.id), {
-            onSuccess: () => toast.success('Decision saved successfully.'),
+            onSuccess: () => {
+                toast.success('Decision saved successfully.');
+                setIsDecisionOpen(false); // Close the decision dialog
+            },
         });
     };
 
@@ -390,63 +405,91 @@ export default function EditorialShow({ manuscript, editors, reviewers, issues, 
                                 <CardHeader>
                                     <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest text-emerald-600">
                                         <BookOpen className="size-4" />
-                                        Publication Details
+                                        Publication
                                     </CardTitle>
-                                    <CardDescription>Assign manuscript to an active issue and set identifiers.</CardDescription>
+                                    <CardDescription>Final stage identifiers and issue assignment.</CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                    <form onSubmit={handlePublish} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Select Issue</Label>
-                                            <select
-                                                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                                                value={publishForm.data.issue_id}
-                                                onChange={e => publishForm.setData('issue_id', e.target.value)}
-                                                required
-                                            >
-                                                <option value="">-- Choose Issue --</option>
-                                                {issues.map(iss => (
-                                                    <option key={iss.id} value={iss.id}>
-                                                        Vol {iss.volume.number}, Issue {iss.number} ({iss.year})
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-2">
-                                                <Label>Start Page</Label>
-                                                <Input
-                                                    placeholder="e.g. 12"
-                                                    value={publishForm.data.page_start}
-                                                    onChange={e => publishForm.setData('page_start', e.target.value)}
-                                                />
+                                <CardContent className="space-y-4">
+                                    {manuscript.status === 'published' && manuscript.issue && (
+                                        <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-bold uppercase text-emerald-600">Active Issue</span>
+                                                <Badge className="bg-emerald-200 text-emerald-700 hover:bg-emerald-200 text-[9px] uppercase">Live</Badge>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label>End Page</Label>
-                                                <Input
-                                                    placeholder="e.g. 24"
-                                                    value={publishForm.data.page_end}
-                                                    onChange={e => publishForm.setData('page_end', e.target.value)}
-                                                />
+                                            <p className="text-xs font-bold text-emerald-900">
+                                                Vol {manuscript.issue.volume.number}, Issue {manuscript.issue.number} ({manuscript.issue.year})
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-2 text-[10px] text-emerald-700/70 border-t border-emerald-200/50 pt-2">
+                                                <p>Pages: {manuscript.page_start}-{manuscript.page_end}</p>
+                                                <p className="text-right">DOI: {manuscript.doi}</p>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>DOI (Digital Object Identifier)</Label>
-                                            <Input
-                                                placeholder="10.1234/journal.ms.001"
-                                                value={publishForm.data.doi}
-                                                onChange={e => publishForm.setData('doi', e.target.value)}
-                                            />
-                                        </div>
-                                        <Button
-                                            type="submit"
-                                            className="w-full bg-emerald-600 hover:bg-emerald-700 h-10 rounded-full font-bold shadow-lg shadow-emerald-200"
-                                            disabled={publishForm.processing}
-                                        >
-                                            <CheckCircle2 className="mr-2 size-4" />
-                                            {manuscript.status === 'published' ? 'Update Publication' : 'Confirm Publication'}
-                                        </Button>
-                                    </form>
+                                    )}
+
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 h-10 rounded-full font-bold shadow-lg shadow-emerald-200">
+                                                {manuscript.status === 'published' ? 'Update Final Info' : 'Publish Manuscript'}
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Publication Management</DialogTitle>
+                                            </DialogHeader>
+                                            <form onSubmit={handlePublish} className="space-y-4 pt-4">
+                                                <div className="space-y-2">
+                                                    <Label>Select Target Issue</Label>
+                                                    <select
+                                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                                                        value={publishForm.data.issue_id}
+                                                        onChange={e => publishForm.setData('issue_id', e.target.value)}
+                                                        required
+                                                    >
+                                                        <option value="">-- Choose Issue --</option>
+                                                        {issues.map(iss => (
+                                                            <option key={iss.id} value={iss.id}>
+                                                                Vol {iss.volume.number}, Issue {iss.number} ({iss.year})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-2">
+                                                        <Label>Start Page No.</Label>
+                                                        <Input
+                                                            placeholder="e.g. 12"
+                                                            value={publishForm.data.page_start}
+                                                            onChange={e => publishForm.setData('page_start', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>End Page No.</Label>
+                                                        <Input
+                                                            placeholder="e.g. 24"
+                                                            value={publishForm.data.page_end}
+                                                            onChange={e => publishForm.setData('page_end', e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Digital Object Identifier (DOI)</Label>
+                                                    <Input
+                                                        placeholder="10.1234/journal.ms.001"
+                                                        value={publishForm.data.doi}
+                                                        onChange={e => publishForm.setData('doi', e.target.value)}
+                                                    />
+                                                </div>
+                                                <Button
+                                                    type="submit"
+                                                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-10 rounded-full font-bold shadow-lg shadow-emerald-200"
+                                                    disabled={publishForm.processing}
+                                                >
+                                                    <CheckCircle2 className="mr-2 size-4" />
+                                                    {manuscript.status === 'published' ? 'Save Changes' : 'Confirm & Publish'}
+                                                </Button>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
                                 </CardContent>
                             </Card>
                         ) : (
@@ -460,123 +503,268 @@ export default function EditorialShow({ manuscript, editors, reviewers, issues, 
                                     <CardDescription>Finalize the manuscript based on evaluation.</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <form onSubmit={handleScreening} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Decision Action</Label>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {[
-                                                    { id: 'proceed', label: 'Accept for Publication', desc: 'Passes all criteria' },
-                                                    { id: 'revision', label: 'Revision Needed', desc: 'Request changes from author' },
-                                                    { id: 'reject', label: 'Decline Submission', desc: 'Archive this manuscript' },
-                                                ].map((opt) => (
-                                                    <div
-                                                        key={opt.id}
-                                                        onClick={() => screeningForm.setData('decision', opt.id as any)}
-                                                        className={cn(
-                                                            "p-3 rounded-xl border transition-all cursor-pointer hover:border-primary/50",
-                                                            screeningForm.data.decision === opt.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-sidebar-border/50"
-                                                        )}
-                                                    >
-                                                        <p className="text-sm font-bold">{opt.label}</p>
-                                                        <p className="text-[10px] text-muted-foreground leading-none mt-1">{opt.desc}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                    {manuscript.status === 'archived' ? (
+                                        <div className="p-4 bg-gray-50 rounded-xl border border-dashed text-center">
+                                            <p className="text-xs text-muted-foreground italic">This manuscript has been archived.</p>
                                         </div>
+                                    ) : manuscript.status === 'draft' ? (
+                                        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-3 shadow-sm shadow-amber-200/20">
+                                            <div className="flex items-center gap-2 text-amber-700">
+                                                <AlertCircle className="size-4" />
+                                                <span className="text-[10px] font-bold uppercase tracking-wider">Awaiting Author Revision</span>
+                                            </div>
+                                            <p className="text-xs text-amber-900 leading-relaxed font-medium">
+                                                This submission is currently being revised by the author. You cannot take a decision until it is re-submitted.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <Dialog open={isDecisionOpen} onOpenChange={setIsDecisionOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button className="w-full h-10 rounded-full font-bold shadow-lg shadow-primary/20">
+                                                    Take Decision
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-md">
+                                                <DialogHeader>
+                                                    <DialogTitle>Editorial Decision</DialogTitle>
+                                                </DialogHeader>
+                                                <form onSubmit={handleScreening} className="space-y-4 pt-4">
+                                                    <div className="space-y-2">
+                                                        <Label>Decision Action</Label>
+                                                        <div className="grid grid-cols-1 gap-2">
+                                                            {[
+                                                                { id: 'proceed', label: 'Accept for Publication', desc: 'Passes all criteria' },
+                                                                { id: 'revision', label: 'Revision Needed', desc: 'Request changes from author' },
+                                                                { id: 'reject', label: 'Decline Submission', desc: 'Archive this manuscript' },
+                                                            ].map((opt) => (
+                                                                <div
+                                                                    key={opt.id}
+                                                                    onClick={() => screeningForm.setData('decision', opt.id as any)}
+                                                                    className={cn(
+                                                                        "p-3 rounded-xl border transition-all cursor-pointer hover:border-primary/50",
+                                                                        screeningForm.data.decision === opt.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-sidebar-border/50"
+                                                                    )}
+                                                                >
+                                                                    <p className="text-sm font-bold">{opt.label}</p>
+                                                                    <p className="text-[10px] text-muted-foreground leading-none mt-1">{opt.desc}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        {screeningForm.errors.decision && (
+                                                            <p className="text-[10px] font-bold text-red-600 mt-1">{screeningForm.errors.decision}</p>
+                                                        )}
+                                                    </div>
 
-                                        <Button
-                                            type="submit"
-                                            className="w-full h-10 rounded-full font-bold shadow-lg shadow-primary/20"
-                                            disabled={!screeningForm.data.decision || screeningForm.processing}
-                                        >
-                                            Save Final Decision
-                                        </Button>
-                                    </form>
+                                                    {screeningForm.data.decision === 'proceed' && hasPendingReviewers && (
+                                                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                                                            <AlertCircle className="size-4 text-red-600 mt-0.5 shrink-0" />
+                                                            <div className="space-y-1">
+                                                                <p className="text-xs font-bold text-red-800 leading-tight">Pending Reviewers Detected</p>
+                                                                <p className="text-[10px] text-red-700 leading-tight">Some invited reviewers have not yet responded. Accepting now will bypass their input.</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="space-y-2">
+                                                        <Label>Notes (Optional)</Label>
+                                                        <Textarea
+                                                            placeholder="Provide explanation for your decision..."
+                                                            value={screeningForm.data.notes}
+                                                            onChange={e => screeningForm.setData('notes', e.target.value)}
+                                                            className="min-h-[100px] text-xs"
+                                                        />
+                                                    </div>
+
+                                                    <Button
+                                                        type="submit"
+                                                        className="w-full h-10 rounded-full font-bold shadow-lg shadow-primary/20"
+                                                        disabled={!screeningForm.data.decision || screeningForm.processing}
+                                                    >
+                                                        Save Final Decision
+                                                    </Button>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
                                 </CardContent>
                             </Card>
                         )}
 
-                        {/* Invitation Card */}
+                        {/* Confirmation Dialog for Editorial Decision */}
+                        <Dialog open={showConfirmDecision} onOpenChange={setShowConfirmDecision}>
+                            <DialogContent className="max-w-sm">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2 text-amber-600">
+                                        <AlertCircle className="size-5" />
+                                        Confirm Decision
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <div className="py-4">
+                                    <p className="text-sm text-center">
+                                        Are you sure you want to proceed with the decision:
+                                    </p>
+                                    <p className="text-lg font-bold text-center mt-1 text-primary capitalize">
+                                        {screeningForm.data.decision === 'proceed' ? 'Accept for Publication' :
+                                            screeningForm.data.decision === 'revision' ? 'Revision Needed' :
+                                                screeningForm.data.decision === 'reject' ? 'Decline Submission' :
+                                                    screeningForm.data.decision}
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground text-center mt-4 italic">
+                                        This action is important and may trigger notifications to the author.
+                                    </p>
+                                </div>
+                                <div className="flex gap-3 pt-2">
+                                    <Button variant="outline" className="flex-1 rounded-full" onClick={() => setShowConfirmDecision(false)}>
+                                        No, Cancel
+                                    </Button>
+                                    <Button className="flex-1 rounded-full bg-primary font-bold shadow-lg" onClick={confirmScreening} disabled={screeningForm.processing}>
+                                        Yes, Proceed
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+
+                        {/* Peer Reviewers Card */}
                         <Card className="border-sidebar-border/50 shadow-sm overflow-hidden border-l-4 border-l-indigo-600">
                             <CardHeader>
                                 <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest text-indigo-600">
                                     <UserPlus className="size-4" />
-                                    Invite Peer Reviewers
+                                    Peer Reviewers
                                 </CardTitle>
-                                <CardDescription>Search experts and set deadlines.</CardDescription>
+                                <CardDescription>Manage experts and evaluation deadlines.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <form onSubmit={handleInviteReviewer} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label>Expert Selection</Label>
-                                        <select
-                                            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                                            value={reviewerForm.data.user_id}
-                                            onChange={e => reviewerForm.setData('user_id', e.target.value)}
-                                            required
-                                        >
-                                            <option value="">-- Choose Reviewer --</option>
-                                            {reviewers.filter(r => !manuscript.assignments.some(a => a.user.id === r.id && a.role === 'reviewer')).map(r => (
-                                                <option key={r.id} value={r.id}>{r.name} ({r.email})</option>
-                                            ))}
-                                        </select>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground">
+                                        <span>Status Peninjauan</span>
+                                        <Badge variant="outline" className="text-[9px] h-4">{reviewerAssignments.length} Assigned</Badge>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>Submission Deadline</Label>
-                                        <Input
-                                            type="date"
-                                            value={reviewerForm.data.due_date}
-                                            onChange={e => reviewerForm.setData('due_date', e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <Button
-                                        type="submit"
-                                        className="w-full bg-indigo-600 hover:bg-indigo-700 h-10 rounded-full font-bold shadow-lg shadow-indigo-200"
-                                        disabled={reviewerForm.processing}
-                                    >
-                                        Send Invitation
-                                    </Button>
-                                </form>
+
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button className="w-full bg-indigo-600 hover:bg-indigo-700 h-10 rounded-full font-bold shadow-lg shadow-indigo-200">
+                                                Invite Reviewer
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Invite Peer Reviewer</DialogTitle>
+                                            </DialogHeader>
+                                            <form onSubmit={handleInviteReviewer} className="space-y-4 pt-4">
+                                                <div className="space-y-2">
+                                                    <Label>Expert Selection</Label>
+                                                    <select
+                                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:ring-1 focus:ring-primary"
+                                                        value={reviewerForm.data.user_id}
+                                                        onChange={e => reviewerForm.setData('user_id', e.target.value)}
+                                                        required
+                                                    >
+                                                        <option value="">-- Choose Reviewer --</option>
+                                                        {reviewers.filter(r => !manuscript.assignments.some(a => a.user.id === r.id && a.role === 'reviewer')).map(r => (
+                                                            <option key={r.id} value={r.id}>{r.name} ({r.email})</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Submission Deadline</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={reviewerForm.data.due_date}
+                                                        onChange={e => reviewerForm.setData('due_date', e.target.value)}
+                                                        required
+                                                    />
+                                                </div>
+                                                <Button
+                                                    type="submit"
+                                                    className="w-full bg-indigo-600 hover:bg-indigo-700 h-10 rounded-full font-bold shadow-lg shadow-indigo-200"
+                                                    disabled={reviewerForm.processing}
+                                                >
+                                                    Send Invitation
+                                                </Button>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
                             </CardContent>
                         </Card>
 
                         {/* Section Editor Assignment */}
                         {auth_user_role !== 'editor' && (
-                            <Card className="border-sidebar-border/50 shadow-sm overflow-hidden">
+                            <Card className="border-sidebar-border/50 shadow-sm overflow-hidden border-l-4 border-l-slate-400">
                                 <CardHeader>
-                                    <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest text-muted-foreground opacity-50">
+                                    <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest text-muted-foreground opacity-70">
                                         <ShieldCheck className="size-4" />
-                                        Accountable Editor
+                                        In-Charge Editor
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     {manuscript.section_editor ? (
-                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-sidebar-border/50">
-                                            <div className="size-8 rounded-full bg-background flex items-center justify-center font-bold text-[10px] border shadow-sm">
-                                                {manuscript.section_editor.name.substring(0, 2).toUpperCase()}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-sidebar-border/50">
+                                                <div className="size-8 rounded-full bg-background flex items-center justify-center font-bold text-[10px] border shadow-sm">
+                                                    {manuscript.section_editor.name.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-[11px] font-bold leading-none">{manuscript.section_editor.name}</p>
+                                                    <p className="text-[9px] text-muted-foreground mt-0.5">Section Editor</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-[11px] font-bold leading-none">{manuscript.section_editor.name}</p>
-                                                <p className="text-[9px] text-muted-foreground mt-0.5">Section Editor</p>
-                                            </div>
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" className="w-full h-8 rounded-full text-[10px] font-bold uppercase tracking-tight">
+                                                        Change Editor
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="max-w-md">
+                                                    <DialogHeader>
+                                                        <DialogTitle>Assign Section Editor</DialogTitle>
+                                                    </DialogHeader>
+                                                    <form onSubmit={handleAssignment} className="space-y-4 pt-4">
+                                                        <select
+                                                            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                                                            value={assignmentForm.data.editor_id}
+                                                            onChange={e => assignmentForm.setData('editor_id', e.target.value)}
+                                                        >
+                                                            <option value="">-- Choose Editor --</option>
+                                                            {editors.map(editor => (
+                                                                <option key={editor.id} value={editor.id}>{editor.name}</option>
+                                                            ))}
+                                                        </select>
+                                                        <Button type="submit" className="w-full h-10 rounded-full font-bold" disabled={!assignmentForm.data.editor_id}>
+                                                            Confirm Assignment
+                                                        </Button>
+                                                    </form>
+                                                </DialogContent>
+                                            </Dialog>
                                         </div>
                                     ) : (
-                                        <form onSubmit={handleAssignment} className="space-y-4">
-                                            <select
-                                                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                                                value={assignmentForm.data.editor_id}
-                                                onChange={e => assignmentForm.setData('editor_id', e.target.value)}
-                                            >
-                                                <option value="">-- Choose Editor --</option>
-                                                {editors.map(editor => (
-                                                    <option key={editor.id} value={editor.id}>{editor.name}</option>
-                                                ))}
-                                            </select>
-                                            <Button type="submit" variant="outline" className="w-full h-10 rounded-full text-xs" disabled={!assignmentForm.data.editor_id}>
-                                                Assign Now
-                                            </Button>
-                                        </form>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" className="w-full h-10 rounded-full text-xs font-bold border-dashed">
+                                                    Assign Section Editor
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-md">
+                                                <DialogHeader>
+                                                    <DialogTitle>Assign Section Editor</DialogTitle>
+                                                </DialogHeader>
+                                                <form onSubmit={handleAssignment} className="space-y-4 pt-4">
+                                                    <select
+                                                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                                                        value={assignmentForm.data.editor_id}
+                                                        onChange={e => assignmentForm.setData('editor_id', e.target.value)}
+                                                    >
+                                                        <option value="">-- Choose Editor --</option>
+                                                        {editors.map(editor => (
+                                                            <option key={editor.id} value={editor.id}>{editor.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <Button type="submit" className="w-full h-10 rounded-full font-bold" disabled={!assignmentForm.data.editor_id}>
+                                                        Confirm Assignment
+                                                    </Button>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
                                     )}
                                 </CardContent>
                             </Card>
