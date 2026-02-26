@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('email_templates', function (Blueprint $table) {
-            $table->id();
-            $table->string('key');
-            $table->string('subject');
-            $table->text('body');
-            $table->timestamps();
+        Schema::table('issues', function (Blueprint $table) {
+            $table->foreignId('journal_id')->nullable()->constrained()->onDelete('cascade');
         });
     }
 
@@ -25,6 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('email_templates');
+        Schema::table('issues', function (Blueprint $table) {
+            $table->dropForeign(['journal_id']);
+            $table->dropColumn('journal_id');
+        });
     }
 };

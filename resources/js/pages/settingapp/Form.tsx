@@ -17,9 +17,9 @@ import { cn } from '@/lib/utils';
 const DEFAULT_WARNA = '#181818';
 
 interface SettingApp {
-  nama_app: string;
-  deskripsi: string;
-  warna: string;
+  name: string;
+  description: string;
+  theme_color: string;
   logo: string;
   favicon: string;
   seo: {
@@ -49,9 +49,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function SettingForm({ setting }: Props) {
   const { data, setData, post, processing, errors } = useForm({
-    nama_app: setting?.nama_app || '',
-    deskripsi: setting?.deskripsi || '',
-    warna: setting?.warna || '#0ea5e9',
+    name: setting?.name || '',
+    description: setting?.description || '',
+    theme_color: setting?.theme_color || '#0ea5e9',
     seo: {
       title: setting?.seo?.title || '',
       description: setting?.seo?.description || '',
@@ -142,46 +142,46 @@ export default function SettingForm({ setting }: Props) {
                   <CardContent className="pt-6 space-y-6 px-6 pb-8">
                     <div className="grid gap-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="nama_app" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Journal Title</Label>
+                        <Label htmlFor="name" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Journal Title</Label>
                         <Input
-                          id="nama_app"
+                          id="name"
                           placeholder="International Journal of Computing"
-                          value={data.nama_app}
-                          onChange={(e) => setData('nama_app', e.target.value)}
-                          className={cn("h-11", errors.nama_app && "border-red-500")}
+                          value={data.name}
+                          onChange={(e) => setData('name', e.target.value)}
+                          className={cn("h-11", errors.name && "border-red-500")}
                         />
-                        <InputError message={errors.nama_app} />
+                        <InputError message={errors.name} />
                       </div>
 
                       <div className="grid gap-2">
-                        <Label htmlFor="deskripsi" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Tagline / Brief Description</Label>
+                        <Label htmlFor="description" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Tagline / Brief Description</Label>
                         <Textarea
-                          id="deskripsi"
+                          id="description"
                           placeholder="Exploring the future of technology and human interaction..."
-                          value={data.deskripsi}
-                          onChange={(e) => setData('deskripsi', e.target.value)}
+                          value={data.description}
+                          onChange={(e) => setData('description', e.target.value)}
                           className="min-h-[100px] resize-none"
                         />
                       </div>
 
                       <div className="grid gap-2">
-                        <Label htmlFor="warna" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Primary Brand Color</Label>
+                        <Label htmlFor="theme_color" className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Primary Brand Color</Label>
                         <div className="flex items-center gap-3">
                           <div className="flex-1 flex items-center gap-3 border rounded-xl px-4 h-11 bg-background hover:ring-2 hover:ring-primary/10 transition-all cursor-pointer group">
                             <Input
-                              id="warna"
+                              id="theme_color"
                               type="color"
-                              value={data.warna}
-                              onChange={(e) => setData('warna', e.target.value)}
+                              value={data.theme_color}
+                              onChange={(e) => setData('theme_color', e.target.value)}
                               className="w-7 h-7 p-0 border-none rounded-full cursor-pointer shadow-sm"
                             />
-                            <span className="text-sm font-mono font-medium uppercase tracking-tight text-neutral-600">{data.warna}</span>
+                            <span className="text-sm font-mono font-medium uppercase tracking-tight text-neutral-600">{data.theme_color}</span>
                           </div>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setData('warna', DEFAULT_WARNA)}
+                            onClick={() => setData('theme_color', DEFAULT_WARNA)}
                             className="text-xs text-neutral-500"
                           >
                             Reset

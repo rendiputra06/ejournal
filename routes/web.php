@@ -25,21 +25,29 @@ use App\Http\Controllers\UserManualController;
 use App\Http\Controllers\VisitorController;
 use App\Http\Controllers\ManuscriptFileController;
 
-Route::get('/', [PublicJournalController::class, 'welcome'])->name('home');
+// Portal Page (List of Journals)
+Route::get('/', function () {
+    return Inertia::render('welcome', [
+        'journals' => \App\Models\Journal::where('is_active', true)->get()
+    ]);
+})->name('home');
 
-// Public Journal Routes
-Route::get('/current', [PublicJournalController::class, 'current'])->name('journal.current');
-Route::get('/archives', [PublicJournalController::class, 'archives'])->name('journal.archives');
-Route::get('/announcements', [PublicJournalController::class, 'announcements'])->name('journal.announcements');
-Route::get('/about', [PublicJournalController::class, 'about'])->name('journal.about');
-Route::get('/search', [PublicJournalController::class, 'search'])->name('journal.search');
-Route::get('/article/{manuscript}', [PublicJournalController::class, 'article'])->name('journal.article');
-Route::get('/issue/{issue}', [PublicJournalController::class, 'issue'])->name('journal.issue');
+// Journal Specific Public Routes
+Route::prefix('j/{journal_slug}')->middleware('journal.identify')->group(function () {
+    Route::get('/', [PublicJournalController::class, 'welcome'])->name('journal.home');
+    Route::get('/current', [PublicJournalController::class, 'current'])->name('journal.current');
+    Route::get('/archives', [PublicJournalController::class, 'archives'])->name('journal.archives');
+    Route::get('/announcements', [PublicJournalController::class, 'announcements'])->name('journal.announcements');
+    Route::get('/about', [PublicJournalController::class, 'about'])->name('journal.about');
+    Route::get('/search', [PublicJournalController::class, 'search'])->name('journal.search');
+    Route::get('/article/{manuscript}', [PublicJournalController::class, 'article'])->name('journal.article');
+    Route::get('/issue/{issue}', [PublicJournalController::class, 'issue'])->name('journal.issue');
+});
 
-Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
+// Admin / Auth Routes - These should also probably be scoped by journal or global
+// For now, let's keep them scoped by journal for the dashboard and management
+Route::prefix('j/{journal_slug}')->middleware(['auth', 'verified', 'journal.identify', 'menus.share', 'menu.permission'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Role-specific Dashboards (Holders)
 
     // Editorial / Management Routes
     Route::prefix('editorial')->name('editorial.')->group(function () {
@@ -106,5 +114,6 @@ Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     Route::get('/manuscripts/{manuscript}/file/download', [ManuscriptFileController::class, 'download'])->name('manuscripts.file.download');
 });
 
+// Settings and Auth remain global for now, but can be adjusted
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

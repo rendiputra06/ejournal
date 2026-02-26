@@ -25,6 +25,7 @@ export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
+    journal: { id: number; name: string; slug: string; theme_color: string | null } | null;
     flash: {
         success: string | null;
         error: string | null;

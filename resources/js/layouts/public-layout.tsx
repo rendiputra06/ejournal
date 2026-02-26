@@ -11,16 +11,19 @@ interface PublicLayoutProps {
 
 export default function PublicLayout({ children }: PublicLayoutProps) {
     const { props } = usePage<SharedData>();
+    const journal = props.journal;
     const setting = props.setting as any;
     const { auth } = props;
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (searchQuery.trim()) {
-            router.get(route('journal.search'), { q: searchQuery });
+        if (searchQuery.trim() && journal) {
+            router.get(route('journal.search', { journal_slug: journal.slug }), { q: searchQuery });
         }
     };
+
+    const appName = journal?.name || setting?.nama_app || 'JournalSystem';
 
     return (
         <div className="min-h-screen flex flex-col bg-background font-sans text-foreground">
@@ -33,28 +36,32 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                                     <BookOpen className="w-5 h-5 text-primary-foreground" />
                                 </div>
-                                <span className="text-xl font-serif font-bold tracking-tight text-primary">{setting?.nama_app || 'JournalSystem'}</span>
+                                <span className="text-xl font-serif font-bold tracking-tight text-primary">{appName}</span>
                             </Link>
-                            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                                <Link href={route('journal.current')} className="hover:text-primary transition-colors">Current</Link>
-                                <Link href={route('journal.archives')} className="hover:text-primary transition-colors">Archives</Link>
-                                <Link href={route('journal.announcements')} className="hover:text-primary transition-colors">Announcements</Link>
-                                <Link href={route('journal.about')} className="hover:text-primary transition-colors">About</Link>
-                            </div>
+                            {journal && (
+                                <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+                                    <Link href={route('journal.current', { journal_slug: journal.slug })} className="hover:text-primary transition-colors">Current</Link>
+                                    <Link href={route('journal.archives', { journal_slug: journal.slug })} className="hover:text-primary transition-colors">Archives</Link>
+                                    <Link href={route('journal.announcements', { journal_slug: journal.slug })} className="hover:text-primary transition-colors">Announcements</Link>
+                                    <Link href={route('journal.about', { journal_slug: journal.slug })} className="hover:text-primary transition-colors">About</Link>
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center gap-4">
-                            <form onSubmit={handleSearch} className="relative hidden sm:block">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <input
-                                    type="search"
-                                    placeholder="Search articles..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 pr-4 py-2 border rounded-full bg-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-48 lg:w-64 transition-all"
-                                />
-                            </form>
+                            {journal && (
+                                <form onSubmit={handleSearch} className="relative hidden sm:block">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <input
+                                        type="search"
+                                        placeholder="Search articles..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-9 pr-4 py-2 border rounded-full bg-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-48 lg:w-64 transition-all"
+                                    />
+                                </form>
+                            )}
                             {auth.user ? (
-                                <Link href="/dashboard">
+                                <Link href={journal ? `/j/${journal.slug}/dashboard` : "/dashboard"}>
                                     <Button variant="default" size="sm">Dashboard</Button>
                                 </Link>
                             ) : (
@@ -87,33 +94,33 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         <div className="col-span-1 md:col-span-2 space-y-6">
                             <div className="flex items-center gap-2 text-white">
                                 <BookOpen className="w-8 h-8" />
-                                <span className="text-2xl font-serif font-bold">{setting?.nama_app || 'JournalSystem'}</span>
+                                <span className="text-2xl font-serif font-bold">{appName}</span>
                             </div>
                             <p className="max-w-md text-sm leading-relaxed">
-                                {setting?.deskripsi || 'Empowering societies through high-quality research and open knowledge dissemination.'}
+                                {journal?.description || setting?.deskripsi || 'Empowering societies through high-quality research.'}
                             </p>
                         </div>
-                        <div className="space-y-4">
-                            <h5 className="text-white font-bold">Quick Links</h5>
-                            <ul className="space-y-2 text-sm">
-                                <li><Link href={route('journal.about')} className="hover:text-white transition-colors">Editorial Team</Link></li>
-                                <li><Link href={route('journal.about')} className="hover:text-white transition-colors">Reviewer Guidelines</Link></li>
-                                <li><Link href={route('journal.about')} className="hover:text-white transition-colors">Publication Ethics</Link></li>
-                                <li><Link href={route('journal.about')} className="hover:text-white transition-colors">Contact Us</Link></li>
-                            </ul>
-                        </div>
+                        {journal && (
+                            <div className="space-y-4">
+                                <h5 className="text-white font-bold">Quick Links</h5>
+                                <ul className="space-y-2 text-sm">
+                                    <li><Link href={route('journal.about', { journal_slug: journal.slug })} className="hover:text-white transition-colors">Editorial Team</Link></li>
+                                    <li><Link href={route('journal.about', { journal_slug: journal.slug })} className="hover:text-white transition-colors">Reviewer Guidelines</Link></li>
+                                    <li><Link href={route('journal.about', { journal_slug: journal.slug })} className="hover:text-white transition-colors">Publication Ethics</Link></li>
+                                </ul>
+                            </div>
+                        )}
                         <div className="space-y-4">
                             <h5 className="text-white font-bold">Connect</h5>
                             <ul className="space-y-2 text-sm">
                                 <li><a href="#" className="hover:text-white transition-colors">Twitter (X)</a></li>
                                 <li><a href="#" className="hover:text-white transition-colors">LinkedIn</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">ResearchGate</a></li>
                             </ul>
                         </div>
                     </div>
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-                        <p>© {new Date().getFullYear()} {setting?.nama_app || 'Journal System'}. All rights reserved.</p>
-                        <p>Powered by Open Journal System (OJS) Design Principles</p>
+                        <p>© {new Date().getFullYear()} {appName}. All rights reserved.</p>
+                        <p>Powered by Multi-Journal Transformation System</p>
                     </div>
                 </div>
             </footer>

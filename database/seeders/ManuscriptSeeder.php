@@ -17,9 +17,11 @@ class ManuscriptSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Fetch Key Users
-        $authorUser = User::where('email', 'author@journal.com')->first();
-        $reviewerUsers = User::role('reviewer')->get();
+        $journal = app('current_journal');
+
+        // 1. Fetch Key Users for this journal
+        $authorUser = User::where('email', "author@{$journal->slug}.com")->first();
+        $reviewerUsers = User::role('reviewer')->get(); // Spatie role filter should respect team ID already set
         $editorUsers = User::role('editor')->get();
         
         if (!$authorUser || $reviewerUsers->isEmpty() || $editorUsers->isEmpty()) {
@@ -28,32 +30,20 @@ class ManuscriptSeeder extends Seeder
 
         $editorId = $editorUsers->first()->id;
 
-        // 2. Clear Existing Data (Optional but recommended for clean seed)
-        // Volume::query()->delete(); // Depends on cascaded deletes
-
         // 3. Create Historical Volumes & Issues (2024)
         $vol1 = Volume::create([
             'number' => '1',
             'year' => 2024,
-            'description' => 'Initial Journal Launch Volume',
+            'description' => 'Initial Volume for ' . $journal->name,
             'is_active' => true
         ]);
 
         $issue1_1 = Issue::create([
             'volume_id' => $vol1->id,
             'number' => '1',
-            'title' => 'Emerging Trends in Research',
+            'title' => 'Emerging Trends in ' . strtoupper($journal->slug),
             'year' => 2024,
             'month' => 'June',
-            'status' => 'published'
-        ]);
-
-        $issue1_2 = Issue::create([
-            'volume_id' => $vol1->id,
-            'number' => '2',
-            'title' => 'The Future of Technology',
-            'year' => 2024,
-            'month' => 'December',
             'status' => 'published'
         ]);
 
@@ -61,7 +51,7 @@ class ManuscriptSeeder extends Seeder
         $vol2 = Volume::create([
             'number' => '2',
             'year' => 2025,
-            'description' => 'Advances in Interdisciplinary Studies',
+            'description' => 'Current Studies in ' . strtoupper($journal->slug),
             'is_active' => true
         ]);
 
@@ -71,61 +61,29 @@ class ManuscriptSeeder extends Seeder
             'title' => 'Open Theme Edition',
             'year' => 2025,
             'month' => 'June',
-            'status' => 'draft'
+            'status' => 'published'
         ]);
 
         // 5. Sample Research Data
         $researchTopics = [
             [
-                'title' => 'Impact of AI on Modern Education Systems',
+                'title' => 'Innovative Research in ' . $journal->name,
                 'category' => 'research',
                 'status' => 'published',
                 'issue' => $issue1_1,
                 'pages' => ['1', '15']
             ],
             [
-                'title' => 'Renewable Energy Solutions for Developing Nations',
+                'title' => 'A Study on ' . strtoupper($journal->slug) . ' Paradigms',
                 'category' => 'research',
                 'status' => 'published',
-                'issue' => $issue1_1,
-                'pages' => ['16', '32']
+                'issue' => $issue2_1,
+                'pages' => ['1', '20']
             ],
             [
-                'title' => 'Cybersecurity Protocols in Healthcare IoT Devices',
-                'category' => 'research',
-                'status' => 'published',
-                'issue' => $issue1_2,
-                'pages' => ['1', '12']
-            ],
-            [
-                'title' => 'Economic Resilience in Post-Pandemic Era',
-                'category' => 'research',
-                'status' => 'published',
-                'issue' => $issue1_2,
-                'pages' => ['13', '28']
-            ],
-            [
-                'title' => 'Sustainable Architecture in Urban Environments',
-                'category' => 'research',
-                'status' => 'final_decision',
-                'issue' => null
-            ],
-            [
-                'title' => 'Deep Learning for Early Cancer Detection',
+                'title' => 'Under Review Paper for ' . $journal->slug,
                 'category' => 'research',
                 'status' => 'reviewing',
-                'issue' => null
-            ],
-            [
-                'title' => 'Blockchain Applications in Supply Chain Management',
-                'category' => 'research',
-                'status' => 'screening',
-                'issue' => null
-            ],
-            [
-                'title' => 'The Role of Social Media in Political Upheaval',
-                'category' => 'review',
-                'status' => 'submitted',
                 'issue' => null
             ],
         ];
@@ -133,9 +91,9 @@ class ManuscriptSeeder extends Seeder
         foreach ($researchTopics as $index => $item) {
             $ms = Manuscript::create([
                 'user_id' => $authorUser->id,
-                'external_id' => 'JRNL-' . (2024 + ($index % 2)) . '-' . Str::random(5),
+                'external_id' => strtoupper($journal->slug) . '-' . (2025) . '-' . Str::random(5),
                 'title' => $item['title'],
-                'abstract' => "This paper discusses " . strtolower($item['title']) . " in detail, covering methodology, results, and discussion for future research references in the field.",
+                'abstract' => "This paper discusses " . strtolower($item['title']) . " in detail.",
                 'keywords' => 'Seeded, Research, ' . $item['category'],
                 'category' => $item['category'],
                 'status' => $item['status'],
@@ -143,52 +101,39 @@ class ManuscriptSeeder extends Seeder
                 'issue_id' => $item['issue'] ? $item['issue']->id : null,
                 'page_start' => $item['issue'] ? $item['pages'][0] : null,
                 'page_end' => $item['issue'] ? $item['pages'][1] : null,
-                'doi' => $item['issue'] ? '10.5555/journal.ms.' . (100 + $index) : null,
-                'created_at' => $item['issue'] ? Carbon::now()->subYear() : Carbon::now()
+                'doi' => $item['issue'] ? '10.5555/' . $journal->slug . '.ms.' . (100 + $index) : null,
             ]);
 
             // Add primary author
             $ms->authors()->create([
                 'name' => $authorUser->name,
                 'email' => $authorUser->email,
-                'affiliation' => 'Journal University',
-                'orcid' => '0000-0001-2345-6789',
+                'affiliation' => $journal->name . ' University',
                 'is_primary' => true,
                 'order' => 0
             ]);
 
-            // Add co-author for some
-            if ($index % 2 == 0) {
-                $ms->authors()->create([
-                    'name' => 'Co-Researcher ' . ($index + 1),
-                    'email' => "co" . ($index + 1) . "@example.com",
-                    'affiliation' => 'Partner Institute',
-                    'is_primary' => false,
-                    'order' => 1
-                ]);
-            }
-
-            // Create assignments and reviews for reviewing/final_decision/published states
-            if (in_array($item['status'], ['reviewing', 'final_decision', 'published'])) {
-                foreach ($reviewerUsers->take(2) as $revIndex => $reviewer) {
+            // Create assignments and reviews
+            if ($item['status'] === 'reviewing' || $item['status'] === 'published') {
+                foreach ($reviewerUsers->take(2) as $reviewer) {
                     $assignment = ManuscriptAssignment::create([
                         'manuscript_id' => $ms->id,
                         'user_id' => $reviewer->id,
                         'role' => 'reviewer',
-                        'status' => ($item['status'] === 'reviewing' && $revIndex === 1) ? 'accepted' : 'completed',
+                        'status' => $item['status'] === 'published' ? 'completed' : 'accepted',
                         'due_date' => Carbon::now()->addDays(14),
                     ]);
 
                     if ($assignment->status === 'completed') {
                         ManuscriptReview::create([
                             'assignment_id' => $assignment->id,
-                            'relevance_score' => rand(4, 5),
-                            'novelty_score' => rand(3, 5),
-                            'methodology_score' => rand(4, 5),
-                            'comment_for_author' => "Good work on " . $item['title'] . ". Consider minor edits to methodology section.",
-                            'comment_for_editor' => "Solid research. Recommend acceptance.",
+                            'relevance_score' => 5,
+                            'novelty_score' => 5,
+                            'methodology_score' => 5,
+                            'comment_for_author' => "Excellent contribution to " . $journal->name,
+                            'comment_for_editor' => "Strongly recommend.",
                             'recommendation' => 'accept_submission',
-                            'submitted_at' => Carbon::now()->subDays(2)
+                            'submitted_at' => Carbon::now()
                         ]);
                     }
                 }

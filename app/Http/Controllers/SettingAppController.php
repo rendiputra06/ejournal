@@ -3,25 +3,26 @@
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
-use App\Models\SettingApp;
 use Illuminate\Http\Request;
 
 class SettingAppController extends Controller
 {
     public function edit()
     {
-        $setting = SettingApp::first();
+        $setting = app('current_journal');
         return Inertia::render('settingapp/Form', ['setting' => $setting]);
     }
 
     public function update(Request $request)
     {
+        $journal = app('current_journal');
+
         $data = $request->validate([
-            'nama_app'          => 'required|string|max:255',
-            'deskripsi'         => 'nullable|string',
+            'name'              => 'required|string|max:255',
+            'description'       => 'nullable|string',
             'logo'              => 'nullable|image|max:2048',
             'favicon'           => 'nullable|image|max:1024',
-            'warna'             => 'nullable|string|max:20',
+            'theme_color'       => 'nullable|string|max:20',
             'seo'               => 'nullable|array',
             'mail_transport'    => 'nullable|string|max:50',
             'mail_host'         => 'nullable|string|max:255',
@@ -34,32 +35,26 @@ class SettingAppController extends Controller
             'guidelines'        => 'nullable|string',
         ]);
 
-        // Ensure we only ever have ONE row in this table
-        $setting = SettingApp::first();
-        if (!$setting) {
-            $setting = new SettingApp();
-        }
-
         // Handle File Uploads
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('logo', 'public');
         } else {
-            unset($data['logo']); // Don't overwrite with null if no new file
+            unset($data['logo']);
         }
 
         if ($request->hasFile('favicon')) {
             $data['favicon'] = $request->file('favicon')->store('favicon', 'public');
         } else {
-            unset($data['favicon']); // Don't overwrite with null if no new file
+            unset($data['favicon']);
         }
 
         // Safety: If password is not provided in request, don't overwrite existing
-        if (empty($data['mail_password']) && $setting->exists) {
+        if (empty($data['mail_password'])) {
             unset($data['mail_password']);
         }
 
-        $setting->fill($data)->save();
+        $journal->update($data);
 
-        return redirect()->back()->with('success', 'Pengaturan berhasil disimpan.');
+        return redirect()->back()->with('success', 'Pengaturan jurnal berhasil disimpan.');
     }
 }

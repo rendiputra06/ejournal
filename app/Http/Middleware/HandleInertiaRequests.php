@@ -9,30 +9,26 @@ use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     */
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $journal = app()->bound('current_journal') ? app('current_journal') : null;
+        $setting = SettingApp::first();
+
+        $appName = $journal?->name ?? $setting?->nama_app ?? config('app.name');
+        $favicon = $journal?->favicon ?? $setting?->favicon;
+
         return array_merge(parent::share($request), [
-            'name' => config('app.name'),
+            'appName' => $appName,
+            'favicon' => $favicon,
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
@@ -41,7 +37,8 @@ class HandleInertiaRequests extends Middleware
                 'success' => session('success'),
                 'error' => session('error'),
             ],
-            'setting' => fn() => SettingApp::first(),
+            'journal' => $journal,
+            'setting' => $setting,
         ]);
     }
 }

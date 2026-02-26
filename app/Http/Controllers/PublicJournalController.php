@@ -120,7 +120,7 @@ class PublicJournalController extends Controller
      */
     public function about()
     {
-        $setting = \App\Models\SettingApp::first();
+        $setting = app('current_journal');
         return Inertia::render('journal/about', [
             'guidelines' => $setting?->guidelines
         ]);

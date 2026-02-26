@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToJournal;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Issue extends Model
 {
+    use BelongsToJournal;
+
     protected $fillable = [
+        'journal_id',
         'volume_id',
         'number',
         'title',

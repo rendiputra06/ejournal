@@ -3,6 +3,8 @@
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ShareMenus;
 use App\Http\Middleware\CheckMenuPermission;
+use App\Http\Middleware\IdentifyJournal;
+use App\Http\Middleware\LogVisitor;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,14 +20,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
-            ShareMenus::class,
-            \App\Http\Middleware\LogVisitor::class,
+            LogVisitor::class,
         ]);
 
         $middleware->trustProxies(at: '*');
 
         $middleware->alias([
             'menu.permission' => CheckMenuPermission::class,
+            'journal.identify' => IdentifyJournal::class,
+            'menus.share' => ShareMenus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

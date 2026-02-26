@@ -24,13 +24,13 @@ interface MenuItem {
 }
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
-  const { auth, menus = [] } = usePage<SharedData & { menus: MenuItem[] }>().props;
+  const { auth, menus = [], journal } = usePage<SharedData & { menus: MenuItem[] }>().props;
   const [lang, setLang] = useState('id');
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   const renderDesktopMenu = (menu: MenuItem) => {
     const hasChildren = menu.children && menu.children.length > 0;
-    const isActive = menu.route && usePage().url.startsWith(menu.route);
+    const isActive = menu.url && usePage().url.startsWith(menu.url);
 
     if (hasChildren) {
       return (
@@ -58,7 +58,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
               return (
                 <DropdownMenuItem key={child.id} asChild className="rounded-xl cursor-pointer py-3 px-3 transition-all focus:bg-primary/5 focus:text-primary group">
                   <Link
-                    href={child.route || '#'}
+                    href={child.url || '#'}
                     className="flex items-center gap-3 w-full"
                     onClick={() => setOpenMenuId(null)}
                   >
@@ -81,7 +81,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     return (
       <Link
         key={menu.id}
-        href={menu.route || '#'}
+        href={menu.url || '#'}
         onClick={() => setOpenMenuId(null)}
         className={cn(
           "px-4 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap hover:scale-105 active:scale-95",
@@ -104,7 +104,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
           <SidebarTrigger className="-ml-1" />
         </div>
 
-        <Link href="/dashboard" className="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-accent/50 transition-all border border-transparent hover:border-sidebar-border/30">
+        <Link href={journal ? `/j/${journal.slug}/dashboard` : "/dashboard"} className="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-accent/50 transition-all border border-transparent hover:border-sidebar-border/30">
           <div className="size-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
             <BookOpen className="w-5 h-5 text-white" />
           </div>

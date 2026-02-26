@@ -5,12 +5,18 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use App\Notifications\CustomResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
     use RefreshDatabase;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Vite::spy();
+    }
 
     public function test_reset_password_link_screen_can_be_rendered()
     {

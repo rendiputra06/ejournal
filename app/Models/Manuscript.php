@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Traits\BelongsToJournal;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Manuscript extends Model implements HasMedia
 {
-    use InteractsWithMedia;
+    use InteractsWithMedia, BelongsToJournal;
 
     protected $fillable = [
+        'journal_id',
         'user_id',
         'section_editor_id',
         'issue_id',

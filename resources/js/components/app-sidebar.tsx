@@ -21,11 +21,12 @@ import type { LucideIcon } from 'lucide-react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { type SharedData } from '@/types';
 
 interface MenuItem {
   id: number;
   title: string;
-  route: string | null;
+  url: string | null;
   icon: string;
   children?: MenuItem[];
 }
@@ -34,7 +35,7 @@ interface MenuItem {
  * Checks if a menu item or any of its children matches the current URL.
  */
 function isMenuItemActive(item: MenuItem, currentUrl: string): boolean {
-  if (item.route && item.route !== '#' && currentUrl.startsWith(item.route)) {
+  if (item.url && item.url !== '#' && currentUrl.startsWith(item.url)) {
     return true;
   }
   if (item.children && item.children.length > 0) {
@@ -62,7 +63,7 @@ function RenderMenu({ items, level = 0, firstExpandedId }: { items: MenuItem[]; 
           ? 'bg-primary/10 text-primary font-medium'
           : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground';
 
-        if (!menu.route && !hasChildren) return null;
+        if (!menu.url && !hasChildren) return null;
 
         return (
           <SidebarMenuItem key={menu.id}>
@@ -101,7 +102,7 @@ function RenderMenu({ items, level = 0, firstExpandedId }: { items: MenuItem[]; 
                   level === 0 ? 'py-3 px-4 my-1' : 'py-2 px-3'
                 )}
               >
-                <Link href={menu.route || '#'}>
+                <Link href={menu.url || '#'}>
                   <Icon className="size-4 mr-3 opacity-80 group-hover:opacity-100" />
                   <span>{menu.title}</span>
                   {level > 0 && (
@@ -118,7 +119,7 @@ function RenderMenu({ items, level = 0, firstExpandedId }: { items: MenuItem[]; 
 }
 
 export function AppSidebar() {
-  const { menus = [] } = usePage().props as { menus?: MenuItem[] };
+  const { menus = [], journal } = usePage<SharedData & { menus: MenuItem[] }>().props;
 
   // Find first menu item with children to expand by default
   const firstExpandedId = menus.find(m => Array.isArray(m.children) && m.children.length > 0)?.id || null;
@@ -129,7 +130,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
-              <Link href="/dashboard" prefetch>
+              <Link href={journal ? `/j/${journal.slug}/dashboard` : "/dashboard"} prefetch>
                 <AppLogo />
               </Link>
             </SidebarMenuButton>

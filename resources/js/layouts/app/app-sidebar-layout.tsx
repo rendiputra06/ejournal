@@ -5,7 +5,7 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 
@@ -18,28 +18,20 @@ interface Props {
 export default function AppSidebarLayout({
   children,
   breadcrumbs = [],
-  title = 'Dashboard',
+  title,
 }: Props) {
-  const { props } = usePage();
+  const { props } = usePage<SharedData>();
 
-  const flash = (props?.flash as { success?: string; error?: string }) ?? {};
-  const setting = props?.setting as {
-    nama_app: string;
-    logo?: string;
-    warna?: string;
-    seo?: {
-      title?: string;
-      description?: string;
-      keywords?: string;
-    };
-  };
+  const flash = props.flash ?? {};
+  const journal = props.journal;
+  const setting = props.setting as any;
 
   useEffect(() => {
-    if (flash.success) toast.success(flash.success);
-    if (flash.error) toast.error(flash.error);
+    if (flash.success) toast.success(flash.success as string);
+    if (flash.error) toast.error(flash.error as string);
   }, [flash]);
 
-  const primaryColor = setting?.warna || '#0ea5e9';
+  const primaryColor = journal?.theme_color || setting?.warna || '#0ea5e9';
   const primaryForeground = '#ffffff';
 
   useEffect(() => {
@@ -50,16 +42,12 @@ export default function AppSidebarLayout({
     return () => unsubscribe();
   }, []);
 
+  const displayTitle = title ?? journal?.name ?? setting?.nama_app ?? 'Dashboard';
+
   return (
     <>
       <Head>
-        <title>{title ?? setting?.seo?.title ?? setting?.nama_app ?? 'Dashboard'}</title>
-        {setting?.seo?.description && (
-          <meta name="description" content={setting.seo.description} />
-        )}
-        {setting?.seo?.keywords && (
-          <meta name="keywords" content={setting.seo.keywords} />
-        )}
+        <title>{displayTitle}</title>
         <style>
           {`
             :root {
@@ -88,7 +76,6 @@ export default function AppSidebarLayout({
         }}
       >
         <AppShell variant="sidebar">
-          {/* Sidebar is only for mobile now */}
           <div className="md:hidden">
             <AppSidebar />
           </div>
