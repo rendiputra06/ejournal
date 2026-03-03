@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { iconMapper } from '@/lib/iconMapper';
+import { JournalSwitcher } from './journal-switcher';
 
 interface MenuItem {
   id: number;
@@ -113,6 +114,8 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider hidden sm:inline-block">Journal System</span>
           </div>
         </Link>
+
+        {/* Journal Switcher removed from header to avoid disruption */}
       </div>
 
       {/* Center Area: Desktop Navigation */}

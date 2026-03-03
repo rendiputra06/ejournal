@@ -14,6 +14,14 @@ class VisitorController extends Controller
      */
     public function index(Request $request)
     {
+        // Journal scoping: use the active journal from the app container (set by JournalMiddleware)
+        $journalId = null;
+        if (app()->bound(\App\Models\Journal::class)) {
+            $journalId = app(\App\Models\Journal::class)->id;
+        }
+
+        $scopeQuery = fn($q) => $journalId ? $q->where('journal_id', $journalId) : $q;
+
         // Date range filter
         $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
@@ -21,7 +29,9 @@ class VisitorController extends Controller
         $search = $request->input('search');
 
         // Base query
-        $query = Visitor::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $query = Visitor::withoutGlobalScopes()
+            ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
 
         // Apply filters
         if ($country) {
@@ -33,31 +43,37 @@ class VisitorController extends Controller
         }
 
         // Statistics
+        $baseStats = Visitor::withoutGlobalScopes()
+            ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
         $stats = [
-            'totalVisitors' => Visitor::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])->count(),
-            'uniqueIPs' => Visitor::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                ->distinct('ip_address')
-                ->count('ip_address'),
-            'topCountry' => Visitor::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            'totalVisitors' => (clone $baseStats)->count(),
+            'uniqueIPs' => (clone $baseStats)->distinct('ip_address')->count('ip_address'),
+            'topCountry' => (clone $baseStats)
                 ->select('country', DB::raw('count(*) as count'))
                 ->groupBy('country')
                 ->orderBy('count', 'desc')
                 ->first(),
-            'todayVisitors' => Visitor::whereDate('created_at', now())->count(),
+            'todayVisitors' => Visitor::withoutGlobalScopes()
+                ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+                ->whereDate('created_at', now())
+                ->count(),
         ];
 
-        // Visitors over time (last 30 days)
-        $visitorsOverTime = Visitor::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count')
-            )
+        // Visitors over time
+        $visitorsOverTime = Visitor::withoutGlobalScopes()
+            ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
         // Top countries
-        $topCountries = Visitor::select('country', 'country_code', DB::raw('count(*) as count'))
+        $topCountries = Visitor::withoutGlobalScopes()
+            ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+            ->select('country', 'country_code', DB::raw('count(*) as count'))
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->groupBy('country', 'country_code')
             ->orderBy('count', 'desc')
@@ -65,7 +81,9 @@ class VisitorController extends Controller
             ->get();
 
         // Top cities
-        $topCities = Visitor::select('city', 'country', DB::raw('count(*) as count'))
+        $topCities = Visitor::withoutGlobalScopes()
+            ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+            ->select('city', 'country', DB::raw('count(*) as count'))
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->groupBy('city', 'country')
             ->orderBy('count', 'desc')
@@ -73,7 +91,9 @@ class VisitorController extends Controller
             ->get();
 
         // Top referrals
-        $topReferrals = Visitor::select('referral', DB::raw('count(*) as count'))
+        $topReferrals = Visitor::withoutGlobalScopes()
+            ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+            ->select('referral', DB::raw('count(*) as count'))
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->whereNotNull('referral')
             ->where('referral', '!=', '')
@@ -83,12 +103,17 @@ class VisitorController extends Controller
             ->get();
 
         // Paginated visitor list
-        $visitors = $query->orderBy('created_at', 'desc')
+        $visitors = $query
+            ->when($country, fn($q) => $q->where('country', $country))
+            ->when($search, fn($q) => $q->where('ip_address', 'like', "%{$search}%"))
+            ->orderBy('created_at', 'desc')
             ->paginate(20)
             ->withQueryString();
 
-        // Get all countries for filter dropdown
-        $countries = Visitor::select('country')
+        // All countries for filter dropdown (scoped to journal)
+        $countries = Visitor::withoutGlobalScopes()
+            ->when($journalId, fn($q) => $q->where('journal_id', $journalId))
+            ->select('country')
             ->distinct()
             ->whereNotNull('country')
             ->orderBy('country')

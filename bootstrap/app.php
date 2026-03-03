@@ -20,12 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
             ShareMenus::class,
             \App\Http\Middleware\LogVisitor::class,
+            \App\Http\Middleware\JournalMiddleware::class,
         ]);
 
         $middleware->trustProxies(at: '*');
 
         $middleware->alias([
             'menu.permission' => CheckMenuPermission::class,
+            'journal' => \App\Http\Middleware\JournalMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

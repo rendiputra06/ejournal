@@ -5,6 +5,7 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import { JournalContextBar } from '@/components/journal-context-bar';
 import { type BreadcrumbItem } from '@/types';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
@@ -88,13 +89,15 @@ export default function AppSidebarLayout({
         }}
       >
         <AppShell variant="sidebar">
-          {/* Sidebar is only for mobile now */}
+          {/* Sidebar: mobile only */}
           <div className="md:hidden">
             <AppSidebar />
           </div>
 
           <AppContent variant="header" className="flex flex-col w-full min-h-screen">
             <AppSidebarHeader breadcrumbs={breadcrumbs} />
+            {/* Journal context switcher bar (desktop only) */}
+            <JournalContextBar />
             <main className="flex-1 p-0">
               {breadcrumbs && breadcrumbs.length > 0 && (
                 <div className="px-4 md:px-6 lg:px-8 pt-4">

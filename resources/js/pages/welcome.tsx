@@ -42,6 +42,7 @@ interface WelcomeProps {
 export default function Welcome({ currentIssue, announcements, stats }: WelcomeProps) {
   const { props } = usePage<SharedData>();
   const setting = props.setting as any;
+  const journal = (props as any).journal as { name: string; slug: string; description?: string } | undefined;
 
   return (
     <PublicLayout>
@@ -55,11 +56,18 @@ export default function Welcome({ currentIssue, announcements, stats }: WelcomeP
       <header className="bg-primary text-primary-foreground py-16 lg:py-24 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
+            {journal?.name && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 mb-6">
+                <span className="text-xs font-bold uppercase tracking-widest text-primary-foreground/80">
+                  {journal.name}
+                </span>
+              </div>
+            )}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight">
-              {setting?.nama_app || 'Advancing Knowledge Through Open Academic Exchange'}
+              {setting?.nama_app || journal?.name || 'Advancing Knowledge Through Open Academic Exchange'}
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 font-light leading-relaxed">
-              {setting?.deskripsi || 'A premier international journal dedicated to publishing high-quality research, fostering innovation, and providing a platform for scholars worldwide.'}
+              {setting?.deskripsi || journal?.description || 'A premier international journal dedicated to publishing high-quality research, fostering innovation, and providing a platform for scholars worldwide.'}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href={route('author.submissions.create')}>

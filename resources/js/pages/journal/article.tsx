@@ -1,19 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-    FileText, 
-    Download, 
-    Eye, 
-    ArrowLeft, 
-    Calendar, 
-    Quote, 
+import {
+    FileText,
+    Download,
+    Eye,
+    ArrowLeft,
+    Calendar,
+    Quote,
     User,
-    BookOpen
+    BookOpen,
+    Copy,
+    Check,
+    GraduationCap
 } from 'lucide-react';
 import {
     Dialog,
@@ -22,6 +25,12 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
 import dayjs from 'dayjs';
 
 interface Author {
@@ -53,6 +62,122 @@ interface Manuscript {
 
 interface ArticleProps {
     article: Manuscript;
+}
+
+// --- Citation Generator Component ---
+function CitationGenerator({ article }: { article: Manuscript }) {
+    const [copied, setCopied] = useState<string | null>(null);
+
+    const authorNames = article.authors.map((a) => a.name);
+    const year = article.issue?.year || dayjs(article.created_at).year();
+    const volume = article.issue?.volume_id ?? '';
+    const number = article.issue?.number ?? '';
+    const journalTitle = document.title?.split(' | ')?.[1] || 'Journal';
+    const articleUrl = window.location.href;
+
+    // Format author list for different styles
+    const authorsAPA = authorNames
+        .map((n) => {
+            const parts = n.trim().split(' ');
+            const last = parts.pop();
+            const initials = parts.map((p) => p[0] + '.').join(' ');
+            return `${last}, ${initials}`;
+        })
+        .join(', ');
+
+    const authorsMLA = authorNames.length > 1
+        ? `${authorNames[0]}, et al`
+        : authorNames[0] || 'Unknown';
+
+    const authorsHarvard = authorNames
+        .map((n) => {
+            const parts = n.trim().split(' ');
+            const last = parts.pop();
+            const initials = parts.map((p) => p[0] + '.').join('');
+            return `${last}, ${initials}`;
+        })
+        .join(', ');
+
+    const authorsVancouver = authorNames
+        .map((n) => {
+            const parts = n.trim().split(' ');
+            const last = parts.pop();
+            const initials = parts.map((p) => p[0]).join('');
+            return `${last} ${initials}`;
+        })
+        .join(', ');
+
+    const citations: Record<string, string> = {
+        APA: `${authorsAPA} (${year}). ${article.title}. ${journalTitle}, ${volume}(${number}). ${articleUrl}`,
+        MLA: `${authorsMLA}. "${article.title}." ${journalTitle}, vol. ${volume}, no. ${number}, ${year}, ${articleUrl}.`,
+        Harvard: `${authorsHarvard} (${year}) '${article.title}', ${journalTitle}, ${volume}(${number}). Available at: ${articleUrl}`,
+        Vancouver: `${authorsVancouver}. ${article.title}. ${journalTitle}. ${year};${volume}(${number}). Available from: ${articleUrl}`,
+        Chicago: `${authorNames.join(', ')}. "${article.title}." ${journalTitle} ${volume}, no. ${number} (${year}). ${articleUrl}.`,
+    };
+
+    const handleCopy = (style: string) => {
+        navigator.clipboard.writeText(citations[style]);
+        setCopied(style);
+        setTimeout(() => setCopied(null), 2000);
+    };
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button
+                    variant="outline"
+                    className="w-full gap-2 h-12 rounded-xl border-amber-300/50 text-amber-700 hover:bg-amber-50 hover:border-amber-400 font-semibold"
+                >
+                    <GraduationCap className="size-5" />
+                    Cite This Article
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <GraduationCap className="size-5 text-primary" />
+                        Citation Generator
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="text-sm text-muted-foreground italic border-l-4 border-primary/20 pl-4 py-2 bg-muted/20 rounded-r-lg">
+                    "{article.title}"
+                </div>
+                <Tabs defaultValue="APA">
+                    <TabsList className="grid w-full grid-cols-5 rounded-xl bg-muted/50">
+                        {Object.keys(citations).map((style) => (
+                            <TabsTrigger key={style} value={style} className="rounded-lg text-xs font-bold">
+                                {style}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                    {Object.entries(citations).map(([style, text]) => (
+                        <TabsContent key={style} value={style}>
+                            <div className="relative mt-3">
+                                <div className="bg-muted/30 border rounded-xl p-4 text-sm leading-relaxed font-serif text-foreground pr-16">
+                                    {text}
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="absolute top-2 right-2 size-9 p-0 rounded-lg hover:bg-primary/10"
+                                    onClick={() => handleCopy(style)}
+                                >
+                                    {copied === style ? (
+                                        <Check className="size-4 text-green-500" />
+                                    ) : (
+                                        <Copy className="size-4 text-muted-foreground" />
+                                    )}
+                                </Button>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-2 italic">
+                                * Please verify this citation before use, especially journal name and volume/issue numbers.
+                            </p>
+                        </TabsContent>
+                    ))}
+                </Tabs>
+            </DialogContent>
+        </Dialog>
+    );
 }
 
 export default function ArticleDetail({ article }: ArticleProps) {
@@ -134,9 +259,9 @@ export default function ArticleDetail({ article }: ArticleProps) {
                     {/* Sidebar Actions */}
                     <div className="space-y-6">
                         <Card className="border-primary/10 shadow-lg shadow-primary/5 overflow-hidden">
-                            <CardContent className="p-6 space-y-4">
+                            <CardContent className="p-6 space-y-3">
                                 <h3 className="font-bold text-lg mb-2">Article Full-Text</h3>
-                                
+
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground h-12 rounded-xl shadow-md">
@@ -169,6 +294,9 @@ export default function ArticleDetail({ article }: ArticleProps) {
                                         Download PDF
                                     </a>
                                 </Button>
+
+                                {/* Citation Generator */}
+                                <CitationGenerator article={article} />
                             </CardContent>
                         </Card>
 
@@ -184,8 +312,8 @@ export default function ArticleDetail({ article }: ArticleProps) {
                                                 </div>
                                             </div>
                                             <div className="space-y-1">
-                                                <Link 
-                                                    href={route('journal.current')} 
+                                                <Link
+                                                    href={route('journal.current')}
                                                     className="font-bold text-sm hover:text-primary transition-colors leading-tight block"
                                                 >
                                                     {article.issue.title || `Vol ${article.issue.volume_id} No ${article.issue.number}`}
@@ -202,7 +330,7 @@ export default function ArticleDetail({ article }: ArticleProps) {
                                 </CardContent>
                             </Card>
                         )}
-                        
+
                         <Card className="border-sidebar-border/50">
                             <CardContent className="p-6 space-y-4">
                                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Article Metrics</h3>

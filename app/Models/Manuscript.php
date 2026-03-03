@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Manuscript extends Model implements HasMedia
 {
-    use InteractsWithMedia;
+    use InteractsWithMedia, \App\Traits\HasJournal;
 
     protected $fillable = [
+        'journal_id',
         'user_id',
         'section_editor_id',
         'issue_id',
@@ -28,6 +29,7 @@ class Manuscript extends Model implements HasMedia
         'page_end',
         'doi',
     ];
+
 
     public function user(): BelongsTo
     {
@@ -53,6 +55,7 @@ class Manuscript extends Model implements HasMedia
     {
         return $this->hasMany(ManuscriptAssignment::class);
     }
+
 
     public function registerMediaCollections(): void
     {

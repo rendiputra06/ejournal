@@ -15,6 +15,7 @@ import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
 import { iconMapper } from '@/lib/iconMapper';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
+import { JournalSwitcher } from './journal-switcher';
 
 const mainNavItems: NavItem[] = [
     {
@@ -83,8 +84,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             </SheetTrigger>
                             <SheetContent side="left" className="flex h-full w-64 flex-col items-stretch justify-between bg-neutral-50">
                                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                                <SheetHeader className="flex justify-start text-left">
+                                <SheetHeader className="flex flex-row items-center justify-between text-left space-y-0">
                                     <AppLogoIcon className="h-6 w-6 fill-current text-black dark:text-white" />
+                                    <JournalSwitcher variant="header" />
                                 </SheetHeader>
                                 <div className="mt-6 flex h-full flex-1 flex-col space-y-4">
                                     <div className="flex h-full flex-col justify-between text-sm">
@@ -150,6 +152,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     <Link href="/dashboard" prefetch className="flex items-center space-x-2">
                         <AppLogo />
                     </Link>
+
+                    <div className="ml-4 hidden lg:flex items-center space-x-4">
+                        <div className="h-6 w-px bg-sidebar-border/30 mx-2" />
+                        <JournalSwitcher variant="header" />
+                    </div>
 
                     {/* Desktop Navigation */}
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">

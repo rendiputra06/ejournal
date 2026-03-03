@@ -127,6 +127,13 @@ class MenuSeeder extends Seeder
                         'order' => 4,
                         'permission_name' => 'menus-view',
                     ],
+                    [
+                        'title' => 'Journals',
+                        'icon' => 'BookOpen',
+                        'route' => '/journals',
+                        'order' => 5,
+                        'permission_name' => 'journals-view',
+                    ],
                 ]
             ],
             [

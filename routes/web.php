@@ -25,18 +25,10 @@ use App\Http\Controllers\UserManualController;
 use App\Http\Controllers\VisitorController;
 use App\Http\Controllers\ManuscriptFileController;
 
-Route::get('/', [PublicJournalController::class, 'welcome'])->name('home');
+Route::get('/', [PublicJournalController::class, 'index'])->name('portal');
 
-// Public Journal Routes
-Route::get('/current', [PublicJournalController::class, 'current'])->name('journal.current');
-Route::get('/archives', [PublicJournalController::class, 'archives'])->name('journal.archives');
-Route::get('/announcements', [PublicJournalController::class, 'announcements'])->name('journal.announcements');
-Route::get('/about', [PublicJournalController::class, 'about'])->name('journal.about');
-Route::get('/search', [PublicJournalController::class, 'search'])->name('journal.search');
-Route::get('/article/{manuscript}', [PublicJournalController::class, 'article'])->name('journal.article');
-Route::get('/issue/{issue}', [PublicJournalController::class, 'issue'])->name('journal.issue');
 
-Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
+Route::middleware(['auth', 'verified', 'menu.permission', 'journal'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Role-specific Dashboards (Holders)
@@ -87,6 +79,7 @@ Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     Route::delete('/files/{id}', [UserFileController::class, 'destroy'])->name('files.destroy');
     Route::resource('media', MediaFolderController::class);
     Route::resource('email-templates', EmailTemplateController::class)->only(['index', 'edit', 'update']);
+    Route::resource('journals', \App\Http\Controllers\JournalController::class)->except(['show']);
 
     // Author Submission Routes
     Route::prefix('author')->name('author.')->group(function () {
@@ -106,5 +99,25 @@ Route::middleware(['auth', 'verified', 'menu.permission'])->group(function () {
     Route::get('/manuscripts/{manuscript}/file/download', [ManuscriptFileController::class, 'download'])->name('manuscripts.file.download');
 });
 
+// Journal admin routes that must NOT go through the journal middleware
+// because they use numeric IDs, not slugs.
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/journals/{id}', [\App\Http\Controllers\JournalController::class, 'show'])->name('journals.show');
+    Route::post('/journals/{id}/switch', [\App\Http\Controllers\JournalController::class, 'switch'])->name('journals.switch');
+});
+
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
+
+// Public Journal Routes
+// Move to bottom to prevent collision with static routes like /login, /dashboard, etc.
+Route::prefix('{journal:slug}')->middleware(['journal'])->group(function () {
+    Route::get('/', [PublicJournalController::class, 'welcome'])->name('home');
+    Route::get('/current', [PublicJournalController::class, 'current'])->name('journal.current');
+    Route::get('/archives', [PublicJournalController::class, 'archives'])->name('journal.archives');
+    Route::get('/announcements', [PublicJournalController::class, 'announcements'])->name('journal.announcements');
+    Route::get('/about', [PublicJournalController::class, 'about'])->name('journal.about');
+    Route::get('/search', [PublicJournalController::class, 'search'])->name('journal.search');
+    Route::get('/article/{manuscript}', [PublicJournalController::class, 'article'])->name('journal.article');
+    Route::get('/issue/{issue}', [PublicJournalController::class, 'issue'])->name('journal.issue');
+});

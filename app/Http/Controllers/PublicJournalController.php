@@ -13,6 +13,21 @@ use Inertia\Inertia;
 class PublicJournalController extends Controller
 {
     /**
+     * Journal Portal (Multi-journal listing).
+     */
+    public function index()
+    {
+        $journals = \App\Models\Journal::where('is_active', true)->get();
+        
+        // If only one journal exists, maybe redirect to it? 
+        // User's choice, but typically portal lists everything.
+        
+        return Inertia::render('portal', [
+            'journals' => $journals
+        ]);
+    }
+
+    /**
      * Landing Page.
      */
     public function welcome()
@@ -122,7 +137,10 @@ class PublicJournalController extends Controller
     {
         $setting = \App\Models\SettingApp::first();
         return Inertia::render('journal/about', [
-            'guidelines' => $setting?->guidelines
+            'guidelines' => $setting?->guidelines,
+            'aims_scope' => $setting?->aims_scope,
+            'peer_review_process' => $setting?->peer_review_process,
+            'open_access_policy' => $setting?->open_access_policy,
         ]);
     }
 

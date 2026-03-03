@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Volume extends Model
 {
+    use \App\Traits\HasJournal;
+
     protected $fillable = [
+        'journal_id',
         'number',
         'description',
         'year',
@@ -17,6 +20,7 @@ class Volume extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
 
     public function issues(): HasMany
     {

@@ -41,7 +41,8 @@ class HandleInertiaRequests extends Middleware
                 'success' => session('success'),
                 'error' => session('error'),
             ],
-            'setting' => fn() => SettingApp::first(),
+            // 'setting' => fn() => SettingApp::first(),
+            'available_journals' => fn() => \App\Models\Journal::where('is_active', true)->select('id', 'name', 'slug')->get(),
         ]);
     }
 }

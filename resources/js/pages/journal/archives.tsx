@@ -40,7 +40,7 @@ export default function Archives({ archives }: ArchivesProps) {
                                     {archives[year].map((issue) => (
                                         <Link
                                             key={issue.id}
-                                            href={route('journal.issue', issue.id)}
+                                            href={route('journal.issue', { issue: issue.id })}
                                             className="group"
                                         >
                                             <div className="p-8 border rounded-2xl bg-white shadow-sm hover:shadow-md transition-all group-hover:border-primary/50 flex items-start gap-4">

@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Issue extends Model
 {
+    use \App\Traits\HasJournal;
+
     protected $fillable = [
+        'journal_id',
         'volume_id',
         'number',
         'title',
@@ -17,6 +20,7 @@ class Issue extends Model
         'status',
         'cover_image_url',
     ];
+
 
     public function volume(): BelongsTo
     {

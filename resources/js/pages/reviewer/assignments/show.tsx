@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Info,
     CheckCircle2,
@@ -16,10 +17,11 @@ import {
     FileText,
     Send,
     Download,
-    MessageSquare,
     AlertCircle,
     Star,
-    Eye
+    Eye,
+    ShieldAlert,
+    ShieldCheck
 } from 'lucide-react';
 import {
     Dialog,
@@ -63,6 +65,8 @@ interface Assignment {
     status: string;
     due_date: string | null;
     review: Review | null;
+    coi_declared: boolean;
+    coi_has_conflict: boolean | null;
 }
 
 interface Props {
@@ -74,9 +78,112 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Assignment Details', href: '#' },
 ];
 
+// --- COI Declaration Card ---
+function CoiDeclarationCard({ assignment }: { assignment: Assignment }) {
+    const [hasConflict, setHasConflict] = useState<boolean | null>(null);
+    const [agree, setAgree] = useState(false);
+
+    const form = useForm({
+        has_conflict: false,
+    });
+
+    const handleDeclare = (conflict: boolean) => {
+        form.setData('has_conflict', conflict);
+        form.post(route('reviewer.assignments.coi', assignment.id), {
+            onSuccess: () => {
+                toast.success(conflict
+                    ? 'Conflict declared. The editorial team will be notified.'
+                    : 'No conflict declared. You may now proceed with the review.');
+            },
+            onError: () => toast.error('Failed to submit declaration. Please try again.'),
+        });
+    };
+
+    if (assignment.coi_declared) {
+        // Already declared, show status
+        if (assignment.coi_has_conflict) {
+            return (
+                <Card className="border-red-200 bg-red-50 shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-red-700 text-sm">
+                            <ShieldAlert className="size-4" />
+                            Conflict of Interest Declared
+                        </CardTitle>
+                        <CardDescription className="text-red-600/80">
+                            You have declared a conflict of interest for this manuscript. The editorial team has been notified and will handle this case.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            );
+        }
+        return null; // No conflict, show normal review form
+    }
+
+    return (
+        <Card className="border-amber-200 bg-amber-50/50 shadow-xl shadow-amber-500/10 animate-in fade-in zoom-in-95 duration-500">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-700">
+                    <ShieldAlert className="size-5" />
+                    Conflict of Interest (COI) Declaration Required
+                </CardTitle>
+                <CardDescription className="text-amber-700/80">
+                    Before accessing the full manuscript, you must declare whether you have any conflict of interest.
+                    This is required to maintain the integrity of the double-blind review process.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+                <div className="bg-white/60 border border-amber-200 rounded-xl p-4 text-sm space-y-2 text-amber-900">
+                    <p className="font-bold">A conflict of interest may include:</p>
+                    <ul className="list-disc list-inside space-y-1 text-amber-800/80">
+                        <li>You know the identity of any of the authors.</li>
+                        <li>You have a close personal or professional relationship with the authors.</li>
+                        <li>You are from the same institution as the authors.</li>
+                        <li>You have a financial interest in the research outcomes.</li>
+                        <li>You have been involved in this research previously.</li>
+                    </ul>
+                </div>
+                <div
+                    className="flex items-start gap-3 cursor-pointer"
+                    onClick={() => setAgree(!agree)}
+                >
+                    <Checkbox
+                        id="coi-agree"
+                        checked={agree}
+                        onCheckedChange={(c) => setAgree(!!c)}
+                        className="mt-0.5 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                    />
+                    <label htmlFor="coi-agree" className="text-sm text-amber-800 cursor-pointer leading-relaxed">
+                        I have read and understood the conflict of interest policy and I am providing an honest declaration.
+                    </label>
+                </div>
+            </CardContent>
+            <CardFooter className="flex flex-col sm:flex-row gap-3 bg-amber-100/40 border-t border-amber-200/60 pt-4">
+                <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-bold shadow-lg shadow-green-600/20 gap-2"
+                    disabled={!agree || form.processing}
+                    onClick={() => handleDeclare(false)}
+                >
+                    <ShieldCheck className="size-4" />
+                    No Conflict – Proceed to Review
+                </Button>
+                <Button
+                    variant="outline"
+                    className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-full font-bold gap-2"
+                    disabled={!agree || form.processing}
+                    onClick={() => handleDeclare(true)}
+                >
+                    <ShieldAlert className="size-4" />
+                    I Have a Conflict of Interest
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+}
+
 export default function ReviewerShow({ assignment }: Props) {
     const { manuscript } = assignment;
-    const [isAccepted, setIsAccepted] = useState(assignment.status === 'accepted');
+
+    const canReview = assignment.coi_declared && !assignment.coi_has_conflict;
 
     const responseForm = useForm({
         status: '' as 'accepted' | 'declined'
@@ -95,7 +202,8 @@ export default function ReviewerShow({ assignment }: Props) {
         responseForm.setData('status', status);
         responseForm.post(route('reviewer.assignments.respond', assignment.id), {
             onSuccess: () => {
-                if (status === 'accepted') setIsAccepted(true);
+                if (status === 'accepted') toast.success('You have accepted the review invitation.');
+                else toast.info('You have declined the review invitation.');
             }
         });
     };
@@ -168,36 +276,40 @@ export default function ReviewerShow({ assignment }: Props) {
                                 Deadline:
                                 <span className="text-foreground font-bold">{assignment.due_date ? dayjs(assignment.due_date).format('DD MMM YYYY') : '-'}</span>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm" className="rounded-full h-8 px-4 border-primary/20 text-primary hover:bg-primary/5">
-                                            <Eye className="size-3.5 mr-2" /> Preview
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
-                                        <DialogHeader className="p-4 border-b">
-                                            <DialogTitle>Manuscript Preview: {manuscript.title}</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="flex-1 bg-muted/20">
-                                            <iframe
-                                                src={route('manuscripts.file.view', manuscript.id)}
-                                                className="w-full h-full border-none"
-                                                title="PDF Preview"
-                                            />
-                                        </div>
-                                    </DialogContent>
-                                </Dialog>
-                                <Button variant="outline" size="sm" className="rounded-full h-8 px-4" asChild>
-                                    <a href={route('manuscripts.file.download', manuscript.id)}>
-                                        <Download className="size-3.5 mr-2" /> Download Manuscript
-                                    </a>
-                                </Button>
-                            </div>
+                            {/* Only show file access after COI is cleared */}
+                            {canReview && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="rounded-full h-8 px-4 border-primary/20 text-primary hover:bg-primary/5">
+                                                <Eye className="size-3.5 mr-2" /> Preview
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
+                                            <DialogHeader className="p-4 border-b">
+                                                <DialogTitle>Manuscript Preview: {manuscript.title}</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="flex-1 bg-muted/20">
+                                                <iframe
+                                                    src={route('manuscripts.file.view', manuscript.id)}
+                                                    className="w-full h-full border-none"
+                                                    title="PDF Preview"
+                                                />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Button variant="outline" size="sm" className="rounded-full h-8 px-4" asChild>
+                                        <a href={route('manuscripts.file.download', manuscript.id)}>
+                                            <Download className="size-3.5 mr-2" /> Download Manuscript
+                                        </a>
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
+                {/* Step 1: Accept/Decline Invitation */}
                 {assignment.status === 'pending' && (
                     <Card className="border-primary/20 bg-primary/5 shadow-xl shadow-primary/5 animate-in fade-in zoom-in-95 duration-500">
                         <CardHeader>
@@ -229,7 +341,13 @@ export default function ReviewerShow({ assignment }: Props) {
                     </Card>
                 )}
 
-                {(assignment.status === 'accepted' || assignment.status === 'completed') && (
+                {/* Step 2: COI Declaration (only after accepted) */}
+                {assignment.status === 'accepted' && (
+                    <CoiDeclarationCard assignment={assignment} />
+                )}
+
+                {/* Step 3: Review Form (only if accepted AND COI cleared) */}
+                {(assignment.status === 'accepted' || assignment.status === 'completed') && canReview && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
                         {/* Left: Info */}
                         <div className="lg:col-span-2 space-y-8">
@@ -338,6 +456,17 @@ export default function ReviewerShow({ assignment }: Props) {
 
                         {/* Right: Meta */}
                         <div className="space-y-6">
+                            <Card className="border-sidebar-border/50 shadow-sm border-t-4 border-t-green-500">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                        <ShieldCheck className="size-3.5 text-green-600" />
+                                        COI Cleared
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-[12px] text-green-700">
+                                    <p>You have declared no conflict of interest for this manuscript. Your review is protected under the double-blind process.</p>
+                                </CardContent>
+                            </Card>
                             <Card className="border-sidebar-border/50 shadow-sm border-t-4 border-t-amber-500">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">

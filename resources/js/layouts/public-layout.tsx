@@ -29,17 +29,17 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16 items-center">
                         <div className="flex items-center gap-8">
-                            <Link href="/" className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
+                            <Link href={route('home', { journal: props.journal?.slug })} className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-primary rounded flex items-center justify-center shadow-lg shadow-primary/20">
                                     <BookOpen className="w-5 h-5 text-primary-foreground" />
                                 </div>
-                                <span className="text-xl font-serif font-bold tracking-tight text-primary">{setting?.nama_app || 'JournalSystem'}</span>
                             </Link>
                             <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                                <Link href={route('journal.current')} className="hover:text-primary transition-colors">Current</Link>
-                                <Link href={route('journal.archives')} className="hover:text-primary transition-colors">Archives</Link>
-                                <Link href={route('journal.announcements')} className="hover:text-primary transition-colors">Announcements</Link>
-                                <Link href={route('journal.about')} className="hover:text-primary transition-colors">About</Link>
+                                <Link href="/" className="hover:text-primary transition-colors">All Journals</Link>
+                                <Link href={route('journal.current', { journal: props.journal?.slug })} className="hover:text-primary transition-colors">Current</Link>
+                                <Link href={route('journal.archives', { journal: props.journal?.slug })} className="hover:text-primary transition-colors">Archives</Link>
+                                <Link href={route('journal.announcements', { journal: props.journal?.slug })} className="hover:text-primary transition-colors">Announcements</Link>
+                                <Link href={route('journal.about', { journal: props.journal?.slug })} className="hover:text-primary transition-colors">About</Link>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -87,10 +87,10 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         <div className="col-span-1 md:col-span-2 space-y-6">
                             <div className="flex items-center gap-2 text-white">
                                 <BookOpen className="w-8 h-8" />
-                                <span className="text-2xl font-serif font-bold">{setting?.nama_app || 'JournalSystem'}</span>
+                                <span className="text-2xl font-serif font-bold">{props.journal?.name || setting?.nama_app || 'JournalSystem'}</span>
                             </div>
                             <p className="max-w-md text-sm leading-relaxed">
-                                {setting?.deskripsi || 'Empowering societies through high-quality research and open knowledge dissemination.'}
+                                {props.journal?.description || setting?.deskripsi || 'Empowering societies through high-quality research and open knowledge dissemination.'}
                             </p>
                         </div>
                         <div className="space-y-4">

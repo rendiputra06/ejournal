@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Eye } from 'lucide-react';
@@ -38,6 +38,7 @@ interface CurrentProps {
 }
 
 export default function Current({ issue }: CurrentProps) {
+    const { journal } = usePage().props as any;
     return (
         <PublicLayout>
             <Head title={issue ? `Vol ${issue.volume_id} No ${issue.number} (${issue.year})` : "Current Issue"} />
@@ -77,7 +78,7 @@ export default function Current({ issue }: CurrentProps) {
                                             <div className="flex flex-col md:flex-row justify-between gap-6">
                                                 <div className="flex-grow space-y-3">
                                                     <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
-                                                        <Link href={route('journal.article', article.id)}>
+                                                        <Link href={route('journal.article', { journal: journal.slug, manuscript: article.id })}>
                                                             {article.title}
                                                         </Link>
                                                     </h3>

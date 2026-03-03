@@ -42,6 +42,8 @@ class RolePermissionSeeder extends Seeder
                 'users-view',
                 'roles-view',
                 'menus-view',
+                'journals-view',
+                'journals-manage',
             ],
             'Settings' => [
                 'settings-view',

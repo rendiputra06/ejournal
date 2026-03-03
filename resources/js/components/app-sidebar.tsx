@@ -14,6 +14,7 @@ import {
 
 import { usePage, Link } from '@inertiajs/react';
 import AppLogo from './app-logo';
+import { JournalSwitcher } from './journal-switcher';
 import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
 import { iconMapper } from '@/lib/iconMapper';
@@ -117,6 +118,7 @@ function RenderMenu({ items, level = 0, firstExpandedId }: { items: MenuItem[]; 
   );
 }
 
+
 export function AppSidebar() {
   const { menus = [] } = usePage().props as { menus?: MenuItem[] };
 
@@ -126,15 +128,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="inset" className="border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <SidebarHeader className="px-4 py-3 border-b">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
-              <Link href="/dashboard" prefetch>
-                <AppLogo />
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <JournalSwitcher />
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4 font-sans">

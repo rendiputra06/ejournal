@@ -14,10 +14,16 @@ class ManuscriptAssignment extends Model
         'status',
         'due_date',
         'notes',
+        'coi_declared',
+        'coi_has_conflict',
+        'coi_declared_at',
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'coi_declared' => 'boolean',
+        'coi_has_conflict' => 'boolean',
+        'coi_declared_at' => 'datetime',
     ];
 
     public function manuscript(): BelongsTo

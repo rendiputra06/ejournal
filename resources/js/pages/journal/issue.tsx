@@ -80,7 +80,7 @@ export default function IssueDetail({ issue }: IssueProps) {
                                                 <div className="flex flex-col md:flex-row justify-between gap-6">
                                                     <div className="flex-grow space-y-3">
                                                         <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
-                                                            <Link href={route('journal.article', article.id)}>
+                                                            <Link href={route('journal.article', { manuscript: article.id })}>
                                                                 {article.title}
                                                             </Link>
                                                         </h3>

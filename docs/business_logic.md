@@ -83,8 +83,24 @@ Sistem menegakkan anonimitas dengan:
 
 ---
 
-## 4. Konstanta & Nilai Teknis
+## 5. Arsitektur Multi-Jurnal (Platform Consortium)
 
-- **Durasi Peninjauan**: Standar adalah 21 hari (dapat dikonfigurasi).
-- **Tenggat Waktu Revisi**: Standar adalah 14 hari untuk revisi minor, 30 hari untuk mayor.
-- **Logika Pengarsipan**: Artikel diarsipkan menggunakan hierarki: `Tahun -> Volume -> Nomor -> Artikel`.
+Sistem ini mendukung pengelolaan banyak jurnal secara independen dalam satu instalasi tunggal.
+
+### 5.1 Isolasi Data Otomatis
+- **Journal Scoping**: Setiap entitas data (Manuscript, Issue, Announcement, dll.) memiliki `journal_id`. 
+- **Global Scope**: Sistem menggunakan `HasJournal` trait untuk menyaring query database secara otomatis. Pengguna di Jurnal A tidak akan pernah melihat data dari Jurnal B.
+- **Context Switching**:
+    - **Publik**: Konteks ditentukan oleh slug URL (misal: `/jurnal-teknik/...`).
+    - **Admin**: Konteks ditentukan oleh sesi pengguna melalui **Journal Switcher**.
+
+### 5.2 Peran dalam Multi-Jurnal
+- **Super Admin**: Memiliki akses global untuk membuat dan mengelola seluruh jurnal di platform.
+- **Editor/Reviewer/Author**: Beroperasi dalam konteks jurnal yang dipilih. Seorang pengguna dapat beralih peran antar jurnal secara dinamis menggunakan switcher di sidebar tanpa perlu login ulang.
+
+### 5.3 Konfigurasi Terpisah
+Setiap jurnal memiliki pengaturan (`SettingApp`) masing-masing, termasuk:
+- Nama & Deskripsi Jurnal.
+- Branding (Logo, Warna, Favicon).
+- SEO & Mail Configuration.
+- Tim Redaksi & Daftar Reviewer.

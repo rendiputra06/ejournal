@@ -6,13 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Announcement extends Model
 {
+    use \App\Traits\HasJournal;
+
     protected $fillable = [
+        'journal_id',
         'user_id',
         'title',
         'slug',
         'content',
         'published_at',
     ];
+
 
     protected $casts = [
         'published_at' => 'datetime',

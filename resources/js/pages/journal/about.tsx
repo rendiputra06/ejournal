@@ -4,9 +4,12 @@ import PublicLayout from '@/layouts/public-layout';
 
 interface AboutProps {
     guidelines?: string;
+    aims_scope?: string;
+    peer_review_process?: string;
+    open_access_policy?: string;
 }
 
-export default function About({ guidelines }: AboutProps) {
+export default function About({ guidelines, aims_scope, peer_review_process, open_access_policy }: AboutProps) {
     return (
         <PublicLayout>
             <Head title="About the Journal" />
@@ -16,44 +19,46 @@ export default function About({ guidelines }: AboutProps) {
                     <p className="text-xl text-muted-foreground">Our mission, values, and editorial policies.</p>
                 </div>
 
-                <div className="prose prose-slate max-w-none space-y-12 text-lg leading-relaxed text-muted-foreground">
-                    {guidelines && (
-                        <section className="bg-white p-8 border rounded-2xl shadow-sm border-primary/20">
-                            <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Author Guidelines</h2>
-                            <div className="whitespace-pre-wrap">
-                                {guidelines}
-                            </div>
+                <div className="prose prose-slate max-w-none space-y-12 text-base leading-relaxed text-muted-foreground">
+                    {aims_scope && (
+                        <section className="bg-white p-8 border rounded-2xl shadow-sm">
+                            <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Aims & Scope</h2>
+                            <div
+                                className="prose-content"
+                                dangerouslySetInnerHTML={{ __html: aims_scope }}
+                            />
                         </section>
                     )}
 
-                    <section className="bg-white p-8 border rounded-2xl shadow-sm">
-                        <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Aims & Scope</h2>
-                        <p>
-                            The Journal System is a premier open-access platform committed to the rapid dissemination of
-                            significant findings in all areas of Science and Humanities. Our mission is to bridge
-                            the gap between theoretical research and practical application. We welcome original research,
-                            reviews, and case studies that push the boundaries of current knowledge.
-                        </p>
-                    </section>
+                    {peer_review_process && (
+                        <section className="bg-white p-8 border rounded-2xl shadow-sm">
+                            <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Peer Review Process</h2>
+                            <div
+                                className="prose-content"
+                                dangerouslySetInnerHTML={{ __html: peer_review_process }}
+                            />
+                        </section>
+                    )}
 
-                    <section className="bg-white p-8 border rounded-2xl shadow-sm">
-                        <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Peer Review Process</h2>
-                        <p>
-                            All research articles in this journal undergo rigorous peer review, based on initial
-                            editor screening and anonymized refereeing by at least two independent expert reviewers.
-                            Our target is to provide a first decision within 4-6 weeks of submission.
-                        </p>
-                    </section>
+                    {open_access_policy && (
+                        <section className="bg-white p-8 border rounded-2xl shadow-sm">
+                            <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Open Access Policy</h2>
+                            <div
+                                className="prose-content"
+                                dangerouslySetInnerHTML={{ __html: open_access_policy }}
+                            />
+                        </section>
+                    )}
 
-                    <section className="bg-white p-8 border rounded-2xl shadow-sm">
-                        <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Open Access Policy</h2>
-                        <p>
-                            This journal provides immediate open access to its content on the principle that
-                            making research freely available to the public supports a greater global exchange of knowledge.
-                            We believe that knowledge should be a public good, available to everyone, regardless of their
-                            affiliation or financial status.
-                        </p>
-                    </section>
+                    {guidelines && (
+                        <section className="bg-white p-8 border rounded-2xl shadow-sm border-primary/20">
+                            <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Author Guidelines</h2>
+                            <div
+                                className="prose-content"
+                                dangerouslySetInnerHTML={{ __html: guidelines }}
+                            />
+                        </section>
+                    )}
                 </div>
             </div>
         </PublicLayout>

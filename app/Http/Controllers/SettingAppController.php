@@ -32,6 +32,9 @@ class SettingAppController extends Controller
             'mail_from_address' => 'nullable|email|max:255',
             'mail_from_name'    => 'nullable|string|max:255',
             'guidelines'        => 'nullable|string',
+            'aims_scope'        => 'nullable|string',
+            'peer_review_process' => 'nullable|string',
+            'open_access_policy' => 'nullable|string',
         ]);
 
         // Ensure we only ever have ONE row in this table

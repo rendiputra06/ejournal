@@ -16,18 +16,22 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
-    @php
-        $favicon = $page['props']->setting->favicon ?? null;
-    @endphp
-
     @if (!empty($favicon))
         <link rel="icon" href="{{ asset('storage/' . $favicon) }}" type="image/png">
     @else
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
     @endif
 
-
     @routes
+    <script>
+        if (typeof window !== 'undefined' && window.Ziggy) {
+            // Pick slug from either bound Journal or shared Inertia props
+            const journalSlug = '{{ app(\App\Models\Journal::class)->slug ?? ($page["props"]["journal"]["slug"] ?? "") }}';
+            if (journalSlug) {
+                window.Ziggy.defaults = { journal: journalSlug };
+            }
+        }
+    </script>
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
     @inertiaHead

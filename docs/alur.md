@@ -2,6 +2,9 @@
 
 Dokumen ini menjelaskan langkah-langkah naskah dari mulai dikirim oleh Penulis hingga akhirnya diterbitkan.
 
+> [!IMPORTANT]
+> **Konteks Multi-Jurnal**: Seluruh alur di bawah ini berjalan di dalam lingkup (`scope`) jurnal yang aktif. Data dari Jurnal A (naskah, editor, reviewer) sepenuhnya terkalibrasi dan terisolasi dari Jurnal B.
+
 ---
 
 ### 1. Pengiriman Naskah (Submission)
